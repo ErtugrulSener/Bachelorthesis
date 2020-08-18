@@ -1,0 +1,140 @@
+% ----------------------------------------------------
+% Magic Comments for LaTeX-editors (TeXstudio, VSCode with LaTeX Workshop extension...)
+% !TeX encoding = utf8
+% !TeX spellcheck = de_DE
+% !TeX program = pdflatex
+% !BIB program = biber
+% ----------------------------------------------------
+
+% ----------------------------------------------------
+% Load the HfTL-Thesis class
+\documentclass[
+% Select the main Language of your thesis here. Titlepage, captions and statement of authorship will change accordingly:
+%
+ngerman % - Deutsch (default)
+% USenglish % - American english
+% UKenglish % - British english
+%
+numeric % (default) use numeric citation style sorted by the occurence in text: [5]
+% alphabetic % - use alphabetic citation style: [Lau95]
+% authoryear % - use authoryear citation style: Laubach 1995
+]{hftlthesis}
+% ----------------------------------------------------
+
+% ----------------------------------------------------
+% Set your custom options here. See https://komascript.de/~mkohm/scrguide.pdf for possibilities.
+
+%\KOMAoption{twoside}{true} % Enable double sided layout
+%\KOMAoption{BCOR}{8.25mm} % Binding Correction, adds the specified margin to the inner side of the page (left on single sided layout). This is to compensate lost page margin due to binding.
+
+% ----------------------------------------------------
+
+% ----------------------------------------------------
+% Load your own packages here
+
+\usepackage{blindtext} % Only for demonstration purposes. Can be removed!
+\usepackage{tikz, pgfplots} % To create diagrams and figures directly with LaTeX
+\usepackage{listings} % support for Sourcecodelistings. For more advanced, prettier highlighting use the minted package instead (https://github.com/gpoore/minted) -> Requires Python with Pygments installed.
+\usepackage{siunitx} % provides support for SI unit handling
+\usepackage[useregional]{datetime2} % support for formatted date
+% ----------------------------------------------------
+
+% ----------------------------------------------------
+% Variables for Titlepage, PDF properties...
+% Below are the default values. Comment them out to change them!
+
+\university{Hochschule für Telekommunikation Leipzig (FH)}
+\institute{Institut für Telekommunikationsinformatik}
+\documentKind{Abschlussarbeit zur Erlangung des akademischen Grades}
+\forDegree{Bachelor of Science}
+%
+\topic{\enquote{Inwiefern bietet die Authentifikation ohne Passwort Vor- und Nachteile gegenüber Javascript basierten Web-Anwendungen hinsichtlich Nutzerfreundlichkeit, Datenschutz und Sicherheit?}}
+%
+\thesisAuthor{Ertugrul Sener}
+\authorDateOfBirth{17.10.1998}
+\authorPlaceOfBirth{Berlin}
+%
+\handInDate{\today} %formatted custom date
+%
+\firstReviewerName{Prof. Dr. Erik Buchmann}
+\firstReviewerInstitution{Hochschule für Telekommunikation Leipzig}
+\firstReviewerInstitutionStreet{Gustav-Freytag-Straße 43-45}
+\firstReviewerInstitutionPlace{04277 Leipzig}
+%
+\secondReviewerName{Juri Lobov}
+\secondReviewerInstitution{T-Systems International GmBH}
+\secondReviewerInstitutionStreet{Holzhauser Straße 1-4}
+\secondReviewerInstitutionPlace{13509 Berlin}
+
+% ----------------------------------------------------
+
+% ----------------------------------------------------
+% Include own references
+\addbibresource{References/online.bib}
+\addbibresource{References/3gpp.bib}
+%\addbibresource{References/etsi.bib}
+\addbibresource{References/itut.bib}
+\addbibresource{References/rfc.bib}
+% ----------------------------------------------------
+
+% ----------------------------------------------------
+% Set a list of directories, where graphics are stored, so you dont have to prepend the subdirectory in \includegraphics. The "Graphics" folder is set by default.
+
+%\graphicspath{{./Graphics/}, {./Images}}
+% ----------------------------------------------------
+
+% ----------------------------------------------------
+% Load acronym definitions
+\input{acronyms}
+\makenoidxglossaries % index acronyms
+% ----------------------------------------------------
+
+% ----------------------------------------------------
+% The document body. Start your work here.
+\begin{document}
+% \frontmatter % page numbers as small roman letters
+\maketitle % print the titlepage
+\cleardoublepage % start a new page
+
+\input{Content/vorwort} % include the file Content/vorwort.tex
+\cleardoublepage
+
+\tableofcontents %print the table of contents
+\cleardoublepage
+
+\printnoidxglossary[type=\acronymtype] % print the list of abbreviations
+\cleardoublepage
+
+\listoffigures % print the list of figures
+\cleardoublepage
+
+\listoftables % print the list of tables
+\cleardoublepage
+
+\lstlistoflistings % print the list of source codes
+\cleardoublepage	
+	
+\mainmatter %page numbers arabic, beginning from 1	
+
+%Include the example document
+\include{Content/beispiel}
+
+% Include the other chapters
+\include{Content/einleitung}
+\include{Content/analyse}
+\include{Content/konzeption}
+\include{Content/ausblick}
+
+\cleardoublepage
+
+\printbibliography % Print the bibliography
+\cleardoublepage
+
+\makedeclarationofauthorship % print the declaration of authorship
+
+\appendix % Begin the appendix. Chapters begin with letters
+% \pagenumbering{Roman} %page numbers as capital roman numbers
+\setcounter{page}{1} % restart page numbers from one
+\include{Content/anhang} % include the appendix
+\end{document}
+% ----------------------------------------------------
