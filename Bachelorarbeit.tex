@@ -37,6 +37,7 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 \usepackage{listings} % support for Sourcecodelistings. For more advanced, prettier highlighting use the minted package instead (https://github.com/gpoore/minted) -> Requires Python with Pygments installed.
 \usepackage{siunitx} % provides support for SI unit handling
 \usepackage[useregional]{datetime2} % support for formatted date
+
 % ----------------------------------------------------
 
 % ----------------------------------------------------
@@ -99,6 +100,8 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 \input{Content/vorwort} % include the file Content/vorwort.tex
 \cleardoublepage
 
+\makedeclarationofauthorship % print the declaration of authorship
+
 \tableofcontents %print the table of contents
 \cleardoublepage
 
@@ -116,21 +119,17 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 	
 \mainmatter %page numbers arabic, beginning from 1	
 
-%Include the example document
-\include{Content/beispiel}
-
 % Include the other chapters
 \include{Content/einleitung}
+\include{Content/grundlagen}
 \include{Content/analyse}
-\include{Content/konzeption}
+\include{Content/auswertung}
 \include{Content/ausblick}
 
 \cleardoublepage
 
 \printbibliography % Print the bibliography
 \cleardoublepage
-
-\makedeclarationofauthorship % print the declaration of authorship
 
 \appendix % Begin the appendix. Chapters begin with letters
 % \pagenumbering{Roman} %page numbers as capital roman numbers
