@@ -18,7 +18,7 @@ ngerman % - Deutsch (default)
 numeric % (default) use numeric citation style sorted by the occurence in text: [5]
 % alphabetic % - use alphabetic citation style: [Lau95]
 % authoryear % - use authoryear citation style: Laubach 1995
-]{hftlthesis}
+]{Bachelorarbeit}
 % ----------------------------------------------------
 
 % ----------------------------------------------------
@@ -37,6 +37,10 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 \usepackage{listings} % support for Sourcecodelistings. For more advanced, prettier highlighting use the minted package instead (https://github.com/gpoore/minted) -> Requires Python with Pygments installed.
 \usepackage{siunitx} % provides support for SI unit handling
 \usepackage[useregional]{datetime2} % support for formatted date
+\usepackage{tocstyle} % support indent in table of contents
+
+% Options for table of contents
+\usetocstyle{KOMAlike}
 
 % ----------------------------------------------------
 
@@ -116,12 +120,11 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 
 \lstlistoflistings % print the list of source codes
 \cleardoublepage	
-	
-\mainmatter %page numbers arabic, beginning from 1	
 
 % Include the other chapters
 \include{Content/einleitung}
 \include{Content/grundlagen}
+\include{Content/methodik}
 \include{Content/analyse}
 \include{Content/auswertung}
 \include{Content/ausblick}
