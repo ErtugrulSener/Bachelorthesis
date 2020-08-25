@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{hftlthesis}[2019/01/21 HfTL Thesis Template]
+\ProvidesClass{Bachelorarbeit}[2019/01/21 HfTL Thesis Template]
 
 % ----------------------------------------------------
 % define language options for automated translation of specific pages
@@ -32,7 +32,7 @@
 
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{scrbook}}
 \ProcessOptions\relax
-\PackageInfo{hftlthesis}{Using language: \@thesisLanguage}
+\PackageInfo{Bachelorarbeit}{Using language: \@thesisLanguage}
 % ----------------------------------------------------
 
 % ----------------------------------------------------

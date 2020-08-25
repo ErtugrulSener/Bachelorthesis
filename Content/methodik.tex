@@ -1,5 +1,13 @@
 % !TeX root = ../my-thesis.tex
 \chapter{Methodik}
-\section{Kriterien zur Bewertung des Prototypen}
-\section{Prototypenkonzept}
+\section{Aufbau des Prototypen}
+Das Ziel des Prototypes ist es, wie eingangs erwähnt, vorhandene Authentifizierungsverfahren abseits der klassischen UserID / Passwort Methode zu begutachten und dessen Schwächen aufzudecken. Darauf aufbauend wurde die Methodik für die Findung eines Verfahrens welches die Kriterien der Sicherheit, des Datenschutzes und der Bequemlichkeit besser erfüllt, gewählt. Der Prototyp beschreibt eine einfache Webseite, die aus dem Internet erreichbar sein wird und zwei Eingabefelder und einen Loginbutton besitzt. Die unterschiedlichen Methoden der Authentifizierung wählt man über ein Dropdownmenü, welches sich zwischen Login-Button und Username / Passwort Feld befindet. Je nach Authentifizierungsverfahren werden kleine Popup-Boxen sichtbar, die die weiteren Schritte für die Authentifikation erläutern.
+Ein Teil des Prototypen soll die gewählten Methoden demonstrieren. Neben einer erfolgreichen Demonstration der Authentifizierung sollen nach jeder Methode auch Kennwerte ausgegeben werden. Einer davon soll zum Beispiel die Zeit von der ersten Eingabe in ein Eingabefeld bis zur Authentifizierung zählen und anzeigen. \\
+\\
+Neben den vorhandenen Methoden soll die eigene Architektur aufgebaut werden, die sich an vorhandenen Authentifikationsmöglichkeiten bedient. Die UserID und das Passwortfeld bleiben stets im Vordergrund, müssen allerdings nicht zwingend für jedes der Verfahren genutzt werden, so kann es zum Beispiel bei einer besitzbasierten Authentifikation bereits reichen, den Besitz (z.B einen USB, welcher einen Schlüssel beherbergt) im Computer einstecken zu haben und auf den Loginbutton zu drücken.
+
 \section{Auswahl der Authentifizierungsverfahren}
+Bei der Wahl der Verfahren muss besonders darauf geachtet werden, dass man versucht, die drei Methoden Wissen, Besitz und körperliche Merkmale möglichst gleichermaßen bedient und großflächig in der Industrie genutzte verwendet. Beim Besitz wurde sich für die \ac{totp} Authentifikation entschieden, da Smartphones heutzutage keine Rarität darstellen und das Verfahren durch Apps wie den Google Authenticator und die vielen Webseiten die diese nutzen an Popularität gewonnen hat. Auf der Wissensebene wurde die E-Mail als zusätzlicher Schutz gewählt, da ein physischer Zugang zum Mailaccount das Wissen über das Passwort und die korrekten Einloggdaten (womöglich auch ein zweiter Faktor oder eine Multifaktor-Authentifizierung) erfordert. Auf der Ebene der biologischen Merkmale wurde der Fingerabdruck gewählt, welcher allerdings nur auf Geräten angezeigt wird, die auch einen entsprecheneden Sensor für Fingerabdrücke besitzen.
+
+\section{Kriterien zur Bewertung des Prototypen}
+\section{Architektur}
