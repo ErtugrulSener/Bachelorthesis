@@ -1,2 +1,4 @@
 [1] https://www.bitkom-research.de/de/pressemitteilung/jeder-dritte-onliner-nutzt-dasselbe-passwort-fuer-mehrere-dienste
 [2] https://www.bitkom.org/Presse/Presseinformation/Jeder-Dritte-nachlaessig-bei-Passwortwahl.html
+[3] Beuchelt, G. Schwache Passwörter — Nutzer spielen weiterhin Vogel Strauß. Wirtsch Inform Manag 10, 18–21 (2018). https://doi.org/10.1007/s35764-018-0094-x
+[4] https://www.bsi-fuer-buerger.de/BSIFB/DE/Empfehlungen/Passwoerter/passwoerter_node.html
