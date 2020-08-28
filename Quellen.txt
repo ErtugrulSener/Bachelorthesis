@@ -2,3 +2,8 @@
 [2] https://www.bitkom.org/Presse/Presseinformation/Jeder-Dritte-nachlaessig-bei-Passwortwahl.html
 [3] Beuchelt, G. Schwache Passwörter — Nutzer spielen weiterhin Vogel Strauß. Wirtsch Inform Manag 10, 18–21 (2018). https://doi.org/10.1007/s35764-018-0094-x
 [4] https://www.bsi-fuer-buerger.de/BSIFB/DE/Empfehlungen/Passwoerter/passwoerter_node.html
+[5] https://www.yubico.com/authentication-standards/fido-u2f/
+[6] https://fidoalliance.org/fido2/
+
+Bilder:
+[P1] https://fidoalliance.org/wp-content/uploads/FIDO2-Graphic-v2.png
