@@ -17,6 +17,10 @@ html body {
     align-items: center;
 }
 
+.login-flex-container input {
+    padding: 5px;
+}
+
 input:focus::placeholder {
     opacity: 0.7;
 }
