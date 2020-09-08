@@ -4,6 +4,7 @@
 [4] https://www.bsi-fuer-buerger.de/BSIFB/DE/Empfehlungen/Passwoerter/passwoerter_node.html
 [5] https://www.yubico.com/authentication-standards/fido-u2f/
 [6] https://fidoalliance.org/fido2/
+[7] https://www.riskbasedsecurity.com/2020/07/23/personal-data-and-credentials-of-268-million-users-exposed-in-recent-wattpad-hack/
 
 Bilder:
 [P1] https://fidoalliance.org/wp-content/uploads/FIDO2-Graphic-v2.png
