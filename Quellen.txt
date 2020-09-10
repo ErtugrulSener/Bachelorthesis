@@ -5,6 +5,10 @@
 [5] https://www.yubico.com/authentication-standards/fido-u2f/
 [6] https://fidoalliance.org/fido2/
 [7] https://www.riskbasedsecurity.com/2020/07/23/personal-data-and-credentials-of-268-million-users-exposed-in-recent-wattpad-hack/
+[8] https://www.bsi.bund.de/DE/Themen/ZertifizierungundAnerkennung/Managementsystemzertifizierung/Zertifizierung27001/GS_Zertifizierung_node.html
+[9] https://www.bsi.bund.de/DE/Themen/ITGrundschutz/ITGrundschutzSchulung/OnlinekursITGrundschutz2018/Lektion_2_Sicherheitsmanagement/Lektion_2_09/Lektion_2_09_node.html
+[10] https://www.bsi.bund.de/DE/Themen/ITGrundschutz/ITGrundschutzSchulung/OnlinekursITGrundschutz2018/Lektion_4_Schutzbedarfsfeststellung/Lektion_4_01/Lektion_4_01_node.html
 
 Bilder:
 [P1] https://fidoalliance.org/wp-content/uploads/FIDO2-Graphic-v2.png
+[P2] https://www.bsi.bund.de/SharedDocs/Bilder/DE/BSI/Themen/grundschutzdeutsch/Webkurs2018/Abb_2_09_Varianten.png?__blob=normal&v=1
