@@ -8,6 +8,8 @@
 [8] https://www.bsi.bund.de/DE/Themen/ZertifizierungundAnerkennung/Managementsystemzertifizierung/Zertifizierung27001/GS_Zertifizierung_node.html
 [9] https://www.bsi.bund.de/DE/Themen/ITGrundschutz/ITGrundschutzSchulung/OnlinekursITGrundschutz2018/Lektion_2_Sicherheitsmanagement/Lektion_2_09/Lektion_2_09_node.html
 [10] https://www.bsi.bund.de/DE/Themen/ITGrundschutz/ITGrundschutzSchulung/OnlinekursITGrundschutz2018/Lektion_4_Schutzbedarfsfeststellung/Lektion_4_01/Lektion_4_01_node.html
+[11] https://link.springer.com/chapter/10.1007/978-3-658-01724-8_3
+[12] https://link.springer.com/article/10.1007%2Fs11623-008-0127-3
 
 Bilder:
 [P1] https://fidoalliance.org/wp-content/uploads/FIDO2-Graphic-v2.png
