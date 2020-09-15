@@ -10,6 +10,7 @@
 [10] https://www.bsi.bund.de/DE/Themen/ITGrundschutz/ITGrundschutzSchulung/OnlinekursITGrundschutz2018/Lektion_4_Schutzbedarfsfeststellung/Lektion_4_01/Lektion_4_01_node.html
 [11] https://link.springer.com/chapter/10.1007/978-3-658-01724-8_3
 [12] https://link.springer.com/article/10.1007%2Fs11623-008-0127-3
+[13] https://tools.ietf.org/html/rfc6238
 
 Bilder:
 [P1] https://fidoalliance.org/wp-content/uploads/FIDO2-Graphic-v2.png
