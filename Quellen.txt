@@ -15,3 +15,4 @@
 Bilder:
 [P1] https://fidoalliance.org/wp-content/uploads/FIDO2-Graphic-v2.png
 [P2] https://www.bsi.bund.de/SharedDocs/Bilder/DE/BSI/Themen/grundschutzdeutsch/Webkurs2018/Abb_2_09_Varianten.png?__blob=normal&v=1
+[P3] https://www.protectimus.com/blog/wp-content/uploads/2020/06/TOTP-algorithm-explained.png
