@@ -2,6 +2,10 @@ html body {
     margin: 0px auto;
 }
 
+.flexbox-authentication-container {
+    min-height: 100px;
+}
+
 .header-flex-container {
     display: flex;
     flex-wrap: wrap;
@@ -11,14 +15,14 @@ html body {
 
 .login-flex-container {
     display: flex;
-    height: 300px;
-    justify-content: center;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
+    margin-top: 20px;
 }
 
-.login-flex-container input {
-    padding: 5px;
+.flexbox-method {
+    padding: 8px;
 }
 
 input:focus::placeholder {

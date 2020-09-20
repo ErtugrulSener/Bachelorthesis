@@ -11,7 +11,7 @@
 \documentclass[
 % Select the main Language of your thesis here. Titlepage, captions and statement of authorship will change accordingly:
 %
-ngerman % - Deutsch (default)
+ngerman,% - Deutsch (default)
 % USenglish % - American english
 % UKenglish % - British english
 %
@@ -37,11 +37,13 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 \usepackage{listings} % support for Sourcecodelistings. For more advanced, prettier highlighting use the minted package instead (https://github.com/gpoore/minted) -> Requires Python with Pygments installed.
 \usepackage{siunitx} % provides support for SI unit handling
 \usepackage[useregional]{datetime2} % support for formatted date
-\usepackage{tocstyle} % support indent in table of contents
+\usepackage{tocbasic} % support indent in table of contents
 \usepackage{graphicx}
 
 % Options for table of contents
-\usetocstyle{KOMAlike}
+\renewcommand*{\tableofcontents}{\listoftoc[\contentsname]{toc}}
+\DeclareTOCStyleEntries[raggedentrytext]{tocline}{section,subsection,subsubsection,paragraph,subparagraph}
+ 
 
 % ----------------------------------------------------
 

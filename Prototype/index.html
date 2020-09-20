@@ -3,36 +3,58 @@
     <head>
         <title>Abschlussarbeit - Ertuğrul Şener</title>
 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
         <link rel="stylesheet" type="text/css" href="style.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="icon" type="image/png" href="images/favicon.png" sizes="32x32">
+
+        <!-- Bootstrap 4 Dependencies -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+        <!-- JSEncrypt-->
+        <script src="scripts/utils/jsencrypt/jsencrypt.min.js"></script>
+
+        <!-- Own librarys -->
+        <script type="text/javascript" src="scripts/utils/jssha/sha.js"></script>
+        <script type="text/javascript" src="scripts/form_handler.js"></script>
+        <script type="text/javascript" src="scripts/authentication.js"></script>
     </head>
 
     <body>
-        <div class="header-flex-container">
-            <div><a href="https://www.hft-leipzig.de/de/start.html"><img class="logo" src="images/logo.jpg"></a></div>
-        </div>
-        <div class="login-flex-container">
-            <div class="form-group">
-                <input class="form-control" type="text" name="login" placeholder="Benutzername" /><br>
-                <input class="form-control" type="text" name="password" placeholder="Passwort" />
+            <div class="header-flex-container">
+                <a href="https://www.hft-leipzig.de/de/start.html"><img class="logo" src="images/telekom_logo.jpg"></a> &
+                <a href="#"><img class="logo" src="images/clientless_logo.png"></a>
             </div>
-            <div class="form-check">
-                <label>Methode wählen: </label>
-                <select name="select_method">
-                    <option class="form-check-label" value="method_1">Passwort</option>
-                    <option class="form-check-label" value="method_2">Fingerabdruck</option>
-                    <option class="form-check-label" value="method_3">TOTP</option>
-                    <option class="form-check-label" value="method_4">FIDO2</option>
-                </select><br>
-           </div>
-           <div>
-                <input class="btn btn-primary" type="submit" name="submit" value="Authentifizieren" />
-           </div>
-        </div>
-
-        <!-- Bootstrap 4 Dependencies -->
-        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    </body>
+            <div class="login-flex-container">
+                <div class="flexbox-authentication-container">
+                    <div id="flexbox_userpass" class="form-group">
+                        <input class="form-control" type="text" id="username" name="username" placeholder="Benutzername" title="Mindestlänge 10" minlength=10 required /><br>
+                        <input class="form-control" type="text" id="password" name="password" placeholder="Passwort" required />
+                    </div>
+                    <div id="flexbox_totp" class="form-group">
+                        <img src="images/favicon.png" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-default" aria-label="Left Align" onclick="onDecreaseMethod()">
+                        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                    </button>
+                    <select class="flexbox-method" id="method" onChange="onChangeAuthenticationMethod(self.value)">
+                        <option class="form-check-label" value=0>Passwort</option>
+                        <option class="form-check-label" value=1>Time Based OTP</option>
+                        <option class="form-check-label" value=2>Web Authentication</option>
+                        <option class="form-check-label" value=3>Clientless Login</option>
+                    </select>
+                    <button type="button" class="btn btn-default" aria-label="Left Align" onclick="onIncreaseMethod()">
+                        <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="form-group">
+                    <input class="btn btn-primary" type="submit" name="submit" value="Authentifizieren" onclick="loginWithUserpass()" />
+                </div>
+            </div>
+      </body>
 </html>
