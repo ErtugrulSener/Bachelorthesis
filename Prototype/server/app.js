@@ -45,7 +45,7 @@ app.use(cookieSession({
 app.use((req, res, next) => {
     //res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Credentials", "true");
-    // res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,POST");
     // res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
     next();
 });
@@ -98,6 +98,11 @@ app.get('/logout', (req, res) => {
     }
 
     res.send()
+});
+
+app.get('/get_public_key', (req, res) => {
+    const pubkey = fs.readFileSync('keys/rsa_1024_pub.pem', 'utf8')
+    apiSend(res, StatusCodes.OK, pubkey)
 });
 
 process.on('exit', () => {

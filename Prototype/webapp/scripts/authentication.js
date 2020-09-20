@@ -1,3 +1,5 @@
+let cached_pubkey = false;
+
 function createHash(text)
 {
     let sha512 = new jsSHA('SHA-512', 'TEXT');
@@ -9,21 +11,24 @@ function createHash(text)
 
 function getPublicKey()
 {
+    if (cached_pubkey)
+        return cached_pubkey;
+
     let publicKey = ""
-    let rawFile = new XMLHttpRequest();
-    rawFile.open("GET", "http://127.0.0.1:5500/keys/rsa_1024_pub.pem", false);
-    rawFile.onreadystatechange = function ()
+    let xhttp = new XMLHttpRequest();
+    xhttp.open("GET", "http://127.0.0.1:3000/get_public_key", false);
+    xhttp.onreadystatechange = function ()
     {
-        if(rawFile.readyState === 4)
+        if (xhttp.readyState === 4 && xhttp.status == 200)
         {
-            if(rawFile.status === 200 || rawFile.status == 0)
-            {
-                publicKey = rawFile.responseText
-            }
+			const response = JSON.parse(this.responseText);
+			publicKey = response.msg
         }
     }
-    rawFile.send(null);
+    xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhttp.send();
 
+    cached_pubkey = publicKey
     return publicKey;
 }
 
