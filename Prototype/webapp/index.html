@@ -40,21 +40,21 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <button type="button" class="btn btn-default" aria-label="Left Align" onclick="onDecreaseMethod()">
+                    <button type="button" class="btn btn-default" aria-label="Left Align" onclick="clsec.onDecreaseMethod()">
                         <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
                     </button>
-                    <select class="flexbox-method" id="method" onChange="onChangeAuthenticationMethod(self.value)">
+                    <select class="flexbox-method" id="method" onChange="clsec.onChangeAuthenticationMethod(this.value)">
                         <option class="form-check-label" value=0>Passwort</option>
                         <option class="form-check-label" value=1>Time Based OTP</option>
                         <option class="form-check-label" value=2>Web Authentication</option>
                         <option class="form-check-label" value=3>Clientless Login</option>
                     </select>
-                    <button type="button" class="btn btn-default" aria-label="Left Align" onclick="onIncreaseMethod()">
+                    <button type="button" class="btn btn-default" aria-label="Left Align" onclick="clsec.onIncreaseMethod()">
                         <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
                     </button>
                 </div>
                 <div class="form-group">
-                    <input class="btn btn-primary" type="submit" id="submit" name="submit" value="Authentifizieren" onclick="loginWithUserpass()" />
+                    <input class="btn btn-primary" type="submit" id="submit" name="submit" value="Authentifizieren" onclick="clsec.loginWithUserpass()" />
                 </div>
             </div>
         </form>
