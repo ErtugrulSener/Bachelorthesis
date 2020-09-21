@@ -72,5 +72,11 @@ function getDictLength(dct)
 }
 
 $(function() {
+    const form = document.getElementById( "main_form" );
+
+    form.addEventListener( "submit", function ( event ) {
+        event.preventDefault();
+    });
+
     refreshForm()
 });

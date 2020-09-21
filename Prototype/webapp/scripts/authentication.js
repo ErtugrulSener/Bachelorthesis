@@ -1,5 +1,9 @@
 let cached_pubkey = false;
 
+const MIN_USERNAME_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 8;
+const SERVER_URL = "http://127.0.0.1:3000/"
+
 function createHash(text)
 {
     let sha512 = new jsSHA('SHA-512', 'TEXT');
@@ -16,7 +20,7 @@ function getPublicKey()
 
     let publicKey = ""
     let xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "http://127.0.0.1:3000/get_public_key", false);
+    xhttp.open("GET", SERVER_URL + "get_public_key", false);
     xhttp.onreadystatechange = function ()
     {
         if (xhttp.readyState === 4 && xhttp.status == 200)
@@ -44,18 +48,34 @@ function encryptWithPublicKey(text)
 
 function loginWithUserpass()
 {
-    let username = encryptWithPublicKey(document.getElementById("username").value)
-    let password = encryptWithPublicKey(document.getElementById("password").value)
+    let userFieldValue = document.getElementById("username").value
+    let passFieldValue = document.getElementById("password").value
+
+    if (userFieldValue.length < MIN_USERNAME_LENGTH || passFieldValue.length < MIN_PASSWORD_LENGTH)
+        return;
+
+    let username = encryptWithPublicKey(userFieldValue)
+    let password = encryptWithPublicKey(passFieldValue)
     let xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
-      if (this.readyState == 4) {
-        console.log(this.responseText);
+      if (this.readyState == 4 && this.status == 200)
+    {
+        window.location.replace("/webapp/secret_panel.html");
+      }
+      else
+      {
+          console.log(this.responseText)
       }
     };
 
-    xhttp.open("POST", "http://127.0.0.1:3000/login");
+    xhttp.open("POST", SERVER_URL + "login");
     xhttp.withCredentials = true;
     xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhttp.send(JSON.stringify({"username": username, "password": password}));
 }
+
+$("#submit").click(function(event) {
+    event.preventDefault();
+    loginWithUserpass()
+});

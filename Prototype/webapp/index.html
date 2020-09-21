@@ -24,15 +24,16 @@
     </head>
 
     <body>
-            <div class="header-flex-container">
-                <a href="https://www.hft-leipzig.de/de/start.html"><img class="logo" src="images/telekom_logo.jpg"></a> &
-                <a href="#"><img class="logo" src="images/clientless_logo.png"></a>
-            </div>
+        <div class="header-flex-container">
+            <a href="https://www.hft-leipzig.de/de/start.html"><img class="logo" src="images/telekom_logo.jpg"></a> &
+            <a href="#"><img class="logo" src="images/clientless_logo.png"></a>
+        </div>
+        <form id="main_form">
             <div class="login-flex-container">
                 <div class="flexbox-authentication-container">
                     <div id="flexbox_userpass" class="form-group">
-                        <input class="form-control" type="text" id="username" name="username" placeholder="Benutzername" title="Mindestlänge 10" minlength=10 required /><br>
-                        <input class="form-control" type="text" id="password" name="password" placeholder="Passwort" required />
+                        <input class="form-control" type="text" id="username" name="username" placeholder="Benutzername" pattern=".{8,}" title="Mindestens 8 Zeichen" minlength=8 required /><br>
+                        <input class="form-control" type="password" id="password" name="password" placeholder="Passwort" pattern=".{8,}" title="Mindestens 8 Zeichen" minlength=8 required />
                     </div>
                     <div id="flexbox_totp" class="form-group">
                         <img src="images/favicon.png" />
@@ -53,8 +54,9 @@
                     </button>
                 </div>
                 <div class="form-group">
-                    <input class="btn btn-primary" type="submit" name="submit" value="Authentifizieren" onclick="loginWithUserpass()" />
+                    <input class="btn btn-primary" type="submit" id="submit" name="submit" value="Authentifizieren" onclick="loginWithUserpass()" />
                 </div>
             </div>
+        </form>
       </body>
 </html>
