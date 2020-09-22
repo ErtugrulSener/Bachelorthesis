@@ -4,11 +4,9 @@ const JSEncrypt = require('node-jsencrypt')
 const cors = require('cors')
 const fs = require('fs')
 const { Pool } = require('pg')
-const { v4: uuidv4 } = require('uuid')
-const Cookies = require('cookies')
 
 const connection = require('./scripts/connection.js')
-const { apiSend } = require('./scripts/api.js')
+const { apiSend, createSessionCookie, clearSessionCookie } = require('./scripts/api.js')
 const { hashString } = require('./scripts/hashing.js')
 
 const WEBAPP_URL = "http://127.0.0.1:5500"
@@ -71,19 +69,13 @@ app.post('/login', function (req, res) {
             return
         }
 
-        let cookieHandler = new Cookies(req, res)
-        cookieHandler.set('user_sid', uuidv4())
+        createSessionCookie(req, res)
         apiSend(res, StatusCodes.OK)
     })
 })
 
 app.post('/logout', (req, res) => {
-    let cookieHandler = new Cookies(req, res)
-
-    if (cookieHandler.get("user_sid")) {
-        cookieHandler.set('user_sid', '', {overwrite: true})
-    }
-
+    clearSessionCookie(req, res)
     res.redirect(WEBAPP_URL + '/webapp/index.html');
 })
 

@@ -1,4 +1,3 @@
-
 window.clsec = (function (form_handler) {
     const METHODS = {
         USERPASS: 0,
@@ -18,6 +17,12 @@ window.clsec = (function (form_handler) {
     {
         const method = Number(document.getElementById("method").value)
         return method
+    }
+
+    function getSessionCookie()
+    {
+        const session_cookie = Cookies.get('user_sid');
+        return session_cookie
     }
 
     function setMethod(new_method)
@@ -79,6 +84,14 @@ window.clsec = (function (form_handler) {
         form.addEventListener( "submit", function ( event ) {
             event.preventDefault();
         });
+
+        const session_cookie = getSessionCookie()
+
+        if (session_cookie)
+        {
+            window.location.replace("/webapp/secret_panel.html");
+            return;
+        }
 
         refreshForm()
     });
