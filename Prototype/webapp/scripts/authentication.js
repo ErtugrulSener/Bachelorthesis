@@ -72,7 +72,7 @@ window.clsec = (function (authentication) {
           }
         };
     
-        xhttp.open("POST", authentication.SERVER_URL + "login");
+        xhttp.open("POST", authentication.SERVER_URL + "password/login");
         xhttp.withCredentials = true;
         xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhttp.send(JSON.stringify({"username": username, "password": password}));

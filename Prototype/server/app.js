@@ -3,17 +3,13 @@ const bodyParser = require('body-parser')
 const JSEncrypt = require('node-jsencrypt')
 const cors = require('cors')
 const fs = require('fs')
+const qrcode = require('qrcode')
 const { Pool } = require('pg')
 
 const connection = require('./scripts/connection.js')
 const { apiSend, createSessionCookie, clearSessionCookie } = require('./scripts/api.js')
 const { hashString } = require('./scripts/hashing.js')
-
-const WEBAPP_URL = "http://127.0.0.1:5500"
-const SERVER_PORT = 3000
-
-const app = express()
-app.listen(SERVER_PORT, () => console.log('clsec started with port: ' + SERVER_PORT))
+const { authenticator } = require('otplib');
 
 const {
     ReasonPhrases,
@@ -21,6 +17,13 @@ const {
     getReasonPhrase,
     getStatusCode,
 } = require('http-status-codes')
+
+const WEBAPP_URL = "http://127.0.0.1:5500"
+const SERVER_PORT = 3000
+const PROJECT_NAME = "clsec"
+
+const app = express()
+app.listen(SERVER_PORT, () => console.log('clsec started with port: ' + SERVER_PORT))
 
 app.use(cors({credentials: true, origin: WEBAPP_URL}))
 
@@ -39,7 +42,7 @@ app.use((req, res, next) => {
 
 const pool = new Pool(connection.getConnectionDetails())
 
-app.post('/login', function (req, res) {
+app.post('/password/login', function (req, res) {
     const encrypted_username = req.body.username
     const encrypted_password = req.body.password
 
@@ -74,6 +77,11 @@ app.post('/login', function (req, res) {
     })
 })
 
+app.get('/password/create_password_hash', (req, res) => {
+    const password_hash = hashString(req.query.password, req.query.salt)
+    apiSend(res, StatusCodes.OK, password_hash)
+})
+
 app.post('/logout', (req, res) => {
     clearSessionCookie(req, res)
     res.redirect(WEBAPP_URL + '/webapp/index.html');
@@ -84,7 +92,38 @@ app.get('/get_public_key', (req, res) => {
     apiSend(res, StatusCodes.OK, pubkey)
 })
 
-app.get('/create_password_hash', (req, res) => {
-    const password_hash = hashString(req.query.password, req.query.salt)
-    apiSend(res, StatusCodes.OK, password_hash)
+app.post('/totp/create_authentication_url', (req, res) => {
+    const username = req.body.username
+
+    pool.query("SELECT totp_secret FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
+        if (queryErr) throw queryErr
+
+        if (queryRes.rows.length == 0)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
+        let secret = "";
+        if (queryRes.rows[0].totp_secret !== null)
+        {
+            secret = queryRes.rows[0].totp_secret;
+        }
+        else
+        {
+            secret = authenticator.generateSecret();
+        }
+
+        const otpauth = authenticator.keyuri(username, PROJECT_NAME, secret);
+        
+        qrcode.toDataURL(otpauth, (err, imageUrl) => {
+            if (err) throw err;
+
+            pool.query("UPDATE users SET totp_secret = $1::text WHERE username = $2::text", [secret, username], (updateErr, updateRes) => {
+                if (updateErr) throw updateErr;
+            })
+
+            apiSend(res, StatusCodes.OK, imageUrl)
+        });
+    })
 })
