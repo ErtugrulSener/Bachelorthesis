@@ -49,7 +49,7 @@ window.clsec = (function (authentication) {
         return encrypted
     }
     
-    authentication.loginWithUserpass = function()
+    loginWithUserpass = function()
     {
         let userFieldValue = document.getElementById("username").value
         let passFieldValue = document.getElementById("password").value
@@ -62,14 +62,14 @@ window.clsec = (function (authentication) {
         let xhttp = new XMLHttpRequest();
     
         xhttp.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200)
-        {
-            window.location.replace("/webapp/secret_panel.html");
-          }
-          else
-          {
-              console.log(this.responseText)
-          }
+            if (this.readyState == 4 && this.status == 200)
+            {
+                window.location.replace("/webapp/secret_panel.html");
+            }
+            else
+            {
+                console.log(this.responseText)
+            }
         };
     
         xhttp.open("POST", authentication.SERVER_URL + "password/login");
@@ -77,11 +77,98 @@ window.clsec = (function (authentication) {
         xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhttp.send(JSON.stringify({"username": username, "password": password}));
     }
+
+    loginWithTotp = function()
+    {
+        let totp_token = clsec.getTotpToken()
+        let userFieldValue = document.getElementById("totp_username").value
+        
+        if (userFieldValue.length < MIN_USERNAME_LENGTH)
+            return;
+    
+        let username = userFieldValue
+        let xhttp = new XMLHttpRequest();
+
+        if (document.getElementById("totp_token").style.display === "block")
+        {
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200)
+                {
+                    window.location.replace("/webapp/secret_panel.html");
+                }
+                else
+                {
+                    console.log(this.responseText)
+                }
+            };
+      
+            xhttp.open("POST", authentication.SERVER_URL + "totp/check_token");
+            xhttp.withCredentials = true;
+            xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhttp.send(JSON.stringify({"username": username, "totp_token": totp_token}));
+        }
+        else
+        {
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4)
+                {
+                    if (this.status == 401)
+                    {
+                        const res = JSON.parse(this.responseText)
+    
+                        let totp_qr_image = document.getElementById("totp_qr_image")
+                        let totp_secret = document.getElementById("totp_secret")
+        
+                        totp_qr_image.src = res.msg.imageUrl;
+                        clsec.showObj("totp_qr_image")
+        
+                        totp_secret.innerHTML = res.msg.secret
+                        totp_secret.href = res.msg.otpauth
+                        clsec.showObj("totp_secret")
+    
+                        clsec.addClass("totp_token", "form-control");
+                        clsec.showObj("totp_token")
+                    }
+                    else if(this.status == 200)
+                    {
+                        clsec.hideObj("totp_qr_image")
+                        clsec.hideObj("totp_secret")
+    
+                        clsec.addClass("totp_token", "form-control");
+                        clsec.showObj("totp_token")
+                    }
+                }
+                else
+                {
+                    console.log(this.responseText)
+                }
+            };
+      
+            xhttp.open("POST", authentication.SERVER_URL + "totp/check_username");
+            xhttp.withCredentials = true;
+            xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhttp.send(JSON.stringify({"username": username}));
+        }
+    }
+
+    const AUTH_FUNCTIONS = {
+        0: loginWithUserpass,
+        1: loginWithTotp,
+    }
+
+    authentication.login = function()
+    {
+        const method = clsec.getMethod()
+        const func = AUTH_FUNCTIONS[method]
+
+        if (func)
+            func()
+    }
     
     $(function() {
         $("#submit").click(function(event) {
             event.preventDefault();
-            authentication.loginWithUserpass()
+            authentication.login()
         });
     });
 

@@ -9,7 +9,7 @@ const { Pool } = require('pg')
 const connection = require('./scripts/connection.js')
 const { apiSend, createSessionCookie, clearSessionCookie } = require('./scripts/api.js')
 const { hashString } = require('./scripts/hashing.js')
-const { authenticator } = require('otplib');
+const { authenticator, totp } = require('otplib');
 
 const {
     ReasonPhrases,
@@ -92,10 +92,32 @@ app.get('/get_public_key', (req, res) => {
     apiSend(res, StatusCodes.OK, pubkey)
 })
 
-app.post('/totp/create_authentication_url', (req, res) => {
+function createTotpAuthenticationUrl(username,  totp_secret, req, res)
+{
+    let secret = totp_secret || authenticator.generateSecret();
+    const otpauth = authenticator.keyuri(username, PROJECT_NAME, secret);
+        
+    qrcode.toDataURL(otpauth, (err, imageUrl) => {
+        if (err) throw err;
+
+        pool.query("UPDATE users SET totp_secret = $1::text WHERE username = $2::text AND totp_secret = null", [secret, username], (updateErr, updateRes) => {
+            if (updateErr) throw updateErr;
+        })
+
+        apiSend(res, StatusCodes.UNAUTHORIZED, {'otpauth': otpauth, 'imageUrl': imageUrl, 'secret': secret})
+    })
+}
+
+app.post('/totp/check_username', (req, res) => {
     const username = req.body.username
 
-    pool.query("SELECT totp_secret FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
+    if (!username)
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED)
+        return
+    }
+
+    pool.query("SELECT totp_secret, totp_activated FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
@@ -104,26 +126,59 @@ app.post('/totp/create_authentication_url', (req, res) => {
             return
         }
 
-        let secret = "";
-        if (queryRes.rows[0].totp_secret !== null)
+        const totp_activated = queryRes.rows[0].totp_activated
+        const totp_secret = queryRes.rows[0].totp_secret
+
+        if (totp_activated === 1)
         {
-            secret = queryRes.rows[0].totp_secret;
+            apiSend(res, StatusCodes.OK)
+            return;
         }
-        else
+
+        createTotpAuthenticationUrl(username, totp_secret, req, res)
+    })
+})
+
+app.post('/totp/check_token', (req, res) => {
+    const username = req.body.username
+    const totp_token = req.body.totp_token
+
+    if (!username || !totp_token)
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED, "1")
+        return
+    }
+
+    pool.query("SELECT totp_secret FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
+        if (queryErr) throw queryErr
+
+        if (queryRes.rows.length == 0)
         {
-            secret = authenticator.generateSecret();
+            apiSend(res, StatusCodes.UNAUTHORIZED, "2")
+            return
         }
 
-        const otpauth = authenticator.keyuri(username, PROJECT_NAME, secret);
-        
-        qrcode.toDataURL(otpauth, (err, imageUrl) => {
-            if (err) throw err;
+        const totp_secret = queryRes.rows[0].totp_secret
 
-            pool.query("UPDATE users SET totp_secret = $1::text WHERE username = $2::text", [secret, username], (updateErr, updateRes) => {
-                if (updateErr) throw updateErr;
-            })
+        if (!totp_secret)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED, "3")
+            return;
+        }
 
-            apiSend(res, StatusCodes.OK, imageUrl)
-        });
+        const isValid = authenticator.check(totp_token, totp_secret);
+
+        if (!isValid)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED, "Invalid TOTP Code")
+            return;
+        }
+
+        pool.query("UPDATE users SET totp_activated = 1 WHERE username = $1::text AND totp_activated = 0", [username], (updateErr, updateRes) => {
+            if (updateErr) throw updateErr;
+        })
+
+        createSessionCookie(req, res)
+        apiSend(res, StatusCodes.OK)
     })
 })

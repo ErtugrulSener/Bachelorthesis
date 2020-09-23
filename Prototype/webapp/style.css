@@ -3,7 +3,7 @@ html body {
 }
 
 .flexbox-authentication-container {
-    min-height: 100px;
+    min-height: 60px;
 }
 
 .header-flex-container {
@@ -23,6 +23,26 @@ html body {
 
 .flexbox-method {
     padding: 8px;
+}
+
+.totp_qr_image {
+    display: none;
+}
+
+.totp_qr_text {
+    display: none;
+    text-align: center;
+    text-decoration: underline;
+    color: black;
+}
+
+.totp_secret {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+._hidden {
+    display: none;
 }
 
 input:focus::placeholder {

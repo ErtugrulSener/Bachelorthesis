@@ -13,13 +13,25 @@ window.clsec = (function (form_handler) {
         3: [],
     }
 
-    function getMethod()
+    form_handler.getMethod = function()
     {
         const method = Number(document.getElementById("method").value)
         return method
     }
 
-    function getSessionCookie()
+    form_handler.getTotpSecret = function()
+    {
+        const totp_secret = document.getElementById("totp_secret").innerHTML
+        return totp_secret
+    }
+
+    form_handler.getTotpToken = function()
+    {
+        const totp_token = document.getElementById("totp_token").value
+        return totp_token
+    }
+
+    form_handler.getSessionCookie = function()
     {
         const session_cookie = Cookies.get('user_sid');
         return session_cookie
@@ -44,32 +56,37 @@ window.clsec = (function (form_handler) {
             for (const elementName of elementsToShow)
             {
                 if (formFields[method].includes(elementName))
-                    showObj(elementName)
+                    form_handler.showObj(elementName)
                 else
-                    hideObj(elementName)
+                    form_handler.hideObj(elementName)
             }
         }
     }
 
-    function hideObj(name)
+    form_handler.hideObj = function(name)
     {
         document.getElementById(name).style.display = "none"
     }
 
-    function showObj(name)
+    form_handler.showObj = function(name)
     {
         document.getElementById(name).style.display = "block"
     }
 
+    form_handler.addClass = function(name, class_name)
+    {
+        document.getElementById(name).classList.add(class_name)
+    }
+
     form_handler.onIncreaseMethod = function()
     {
-        const method = (getMethod() + 1) % getDictLength(formFields)
+        const method = (form_handler.getMethod() + 1) % getDictLength(formFields)
         setMethod(method)
     }
 
     form_handler.onDecreaseMethod = function()
     {
-        const method = (getMethod() - 1 + getDictLength(formFields)) % getDictLength(formFields)
+        const method = (form_handler.getMethod() - 1 + getDictLength(formFields)) % getDictLength(formFields)
         setMethod(method)
     }
 
@@ -79,21 +96,16 @@ window.clsec = (function (form_handler) {
     }
 
     $(function() {
-        const form = document.getElementById( "main_form" );
+        const form = document.getElementById("main_form");
 
-        form.addEventListener( "submit", function ( event ) {
-            event.preventDefault();
-        });
-
-        const session_cookie = getSessionCookie()
-
-        if (session_cookie)
+        if (form)
         {
-            window.location.replace("/webapp/secret_panel.html");
-            return;
-        }
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+            });
 
-        refreshForm()
+            refreshForm()
+        }
     });
 
     return form_handler;

@@ -22,6 +22,14 @@
         <!-- Own librarys -->
         <script src="scripts/form_handler.js"></script>
         <script src="scripts/authentication.js"></script>
+
+        <script type="text/javascript">
+            const session_cookie = clsec.getSessionCookie()
+            if (session_cookie)
+            {
+                window.location.replace("/webapp/secret_panel.html");
+            }
+        </script>
     </head>
 
     <body>
@@ -37,7 +45,10 @@
                         <input class="form-control" type="password" id="password" name="password" placeholder="Passwort" pattern=".{8,}" title="Mindestens 8 Zeichen" minlength=8 required />
                     </div>
                     <div id="flexbox_totp" class="form-group">
-                        <img src="images/favicon.png" />
+                        <input class="form-control" type="text" id="totp_username" name="totp_username" placeholder="Benutzername" pattern=".{8,}" title="Mindestens 8 Zeichen" minlength=8 required /><br>
+                        <img id="totp_qr_image" class="totp_qr_image" />
+                        <a id="totp_secret" class="totp_secret"></a>
+                        <input class="_hidden" type="text" id="totp_token" name="totp_token" placeholder="Sechsstelliger TOTP-Token" pattern=".{6,}" title="Mindestens 6 Zeichen" minlength=6 required /><br>
                     </div>
                 </div>
                 <div class="form-group">
@@ -55,7 +66,7 @@
                     </button>
                 </div>
                 <div class="form-group">
-                    <input class="btn btn-primary" type="submit" id="submit" name="submit" value="Authentifizieren" onclick="clsec.loginWithUserpass()" />
+                    <input class="btn btn-primary" type="submit" id="submit" name="submit" value="Authentifizieren" />
                 </div>
             </div>
         </form>
