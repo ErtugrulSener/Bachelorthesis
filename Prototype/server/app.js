@@ -9,7 +9,7 @@ const { Pool } = require('pg')
 const connection = require('./scripts/connection.js')
 const { apiSend, createSessionCookie, clearSessionCookie } = require('./scripts/api.js')
 const { hashString } = require('./scripts/hashing.js')
-const { authenticator, totp } = require('otplib');
+const { authenticator } = require('otplib');
 
 const {
     ReasonPhrases,
@@ -145,7 +145,7 @@ app.post('/totp/check_token', (req, res) => {
 
     if (!username || !totp_token)
     {
-        apiSend(res, StatusCodes.UNAUTHORIZED, "1")
+        apiSend(res, StatusCodes.UNAUTHORIZED)
         return
     }
 
@@ -154,7 +154,7 @@ app.post('/totp/check_token', (req, res) => {
 
         if (queryRes.rows.length == 0)
         {
-            apiSend(res, StatusCodes.UNAUTHORIZED, "2")
+            apiSend(res, StatusCodes.UNAUTHORIZED)
             return
         }
 
@@ -162,7 +162,7 @@ app.post('/totp/check_token', (req, res) => {
 
         if (!totp_secret)
         {
-            apiSend(res, StatusCodes.UNAUTHORIZED, "3")
+            apiSend(res, StatusCodes.UNAUTHORIZED)
             return;
         }
 
