@@ -1,34 +1,49 @@
-import { solveRegistrationChallenge, solveLoginChallenge } from '@webauthn/client';
+import { 
+    solveRegistrationChallenge,
+    solveLoginChallenge
+} from './utils/webauthn/client/index.js';
 
-// const loginButton = document.getElementById('login');
-const registerButton = document.getElementById('register');
+window.clsec = (function (webauthn) {
+    const MIN_USERNAME_LENGTH = 8
 
-registerButton.onclick = async () => {
-    const challenge = await fetch('https://${clsec.SERVER_URL}/request-register', {
-        method: 'POST',
-        headers: {
-            'content-type': 'Application/Json'
-        },
-        body: JSON.stringify({ id: 'uuid', email: 'test@clsec.de' })
-    })
-        .then(response => response.json());
-    const credentials = await solveRegistrationChallenge(challenge);
+    webauthn.loginWithWebAuthentication = (async () =>
+    {
+        const username = document.getElementById("webauthn_username").value
 
-    const { loggedIn } = await fetch(
-        'http://${clsec.SERVER_URL}/webauthn/register',
-        {
+        if (username.length < MIN_USERNAME_LENGTH)
+            return;
+
+        const challenge = await fetch(clsec.SERVER_URL + 'webauthn/request-register', {
             method: 'POST',
             headers: {
                 'content-type': 'Application/Json'
             },
-            body: JSON.stringify(credentials)
-        }
-    ).then(response => response.json());
+            body: JSON.stringify({ "username": username })
+        })
+        .then(response => response.json());
 
-    if (!loggedIn) {
-        console.log("Registration failed")
-        return;
-    }
+        console.log(challenge)
+        const credentials = await solveRegistrationChallenge(challenge);
+        // console.log(credentials)
 
-    console.log("Registration successful")
-};
+        /*const { loggedIn } = await fetch(
+            'http://${clsec.SERVER_URL}/webauthn/register',
+            {
+                method: 'POST',
+                headers: {
+                    'content-type': 'Application/Json'
+                },
+                body: JSON.stringify(credentials)
+            }
+        ).then(response => response.json());
+
+        if (!loggedIn) {
+            console.log("Registration failed")
+            return;
+        }*/
+
+        console.log("Registration successful")
+    });
+
+    return webauthn;
+}(window.clsec || {}));

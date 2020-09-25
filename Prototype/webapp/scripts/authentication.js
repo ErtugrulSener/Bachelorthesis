@@ -1,11 +1,10 @@
-
 window.clsec = (function (authentication) {
     let cached_pubkey = false;
 
     const MIN_USERNAME_LENGTH = 8;
     const MIN_PASSWORD_LENGTH = 8;
 
-    authentication.SERVER_URL = "http://127.0.0.1:3000/"
+    authentication.SERVER_URL = "https://127.0.0.1:3000/"
     
     authentication.createHash = function(text)
     {
@@ -151,19 +150,14 @@ window.clsec = (function (authentication) {
         }
     }
 
-    loginWithWebAuthentication = function()
-    {
-        console.log("hi")
-    }
-
-    const AUTH_FUNCTIONS = {
-        0: loginWithUserpass,
-        1: loginWithTotp,
-        2: loginWithWebAuthentication,
-    }
-
     authentication.login = function()
     {
+        const AUTH_FUNCTIONS = {
+            0: loginWithUserpass,
+            1: loginWithTotp,
+            2: authentication.loginWithWebAuthentication,
+        }
+
         const method = clsec.getMethod()
         const func = AUTH_FUNCTIONS[method]
 

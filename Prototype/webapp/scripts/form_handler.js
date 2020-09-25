@@ -9,7 +9,7 @@ window.clsec = (function (form_handler) {
     let formFields = {
         0: ["flexbox_userpass"],
         1: ["flexbox_totp"],
-        2: [],
+        2: ["flexbox_webauthn"],
         3: [],
     }
 

@@ -1,3 +1,8 @@
 {
-    "liveServer.settings.multiRootWorkspaceName": "Prototype"
+    "liveServer.settings.multiRootWorkspaceName": "Prototype",
+	"liveServer.settings.https": {
+		"enable": true,
+		"cert": "C:\\Users\\Lead0\\Desktop\\Bachelorarbeit\\Prototype\\keys\\ssl\\server.cert",
+		"key": "C:\\Users\\Lead0\\Desktop\\Bachelorarbeit\\Prototype\\keys\\ssl\\server.key",
+	}
 }

@@ -18,6 +18,7 @@
         <script src="scripts/utils/jsencrypt/jsencrypt.min.js"></script>
         <script src="scripts/utils/jssha/sha.js"></script>
         <script src="scripts/utils/jscookie/jscookie.js"></script>
+        <script src="scripts/utils/jsunibabel/index.js"></script>
 
         <!-- Own librarys / modules -->
         <script src="scripts/form_handler.js"></script>
@@ -50,6 +51,9 @@
                         <img id="totp_qr_image" class="totp_qr_image" />
                         <a id="totp_secret" class="totp_secret"></a>
                         <input class="_hidden" type="text" id="totp_token" name="totp_token" placeholder="Sechsstelliger TOTP-Token" pattern=".{6,}" title="Mindestens 6 Zeichen" minlength=6 required /><br>
+                    </div>
+                    <div id="flexbox_webauthn" class="form-group">
+                        <input class="form-control" type="text" value="ertugrulsener" id="webauthn_username" name="webauthn_username" placeholder="Benutzername" pattern=".{8,}" title="Mindestens 8 Zeichen" minlength=8 required /><br>
                     </div>
                 </div>
                 <div class="form-group">

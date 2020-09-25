@@ -4,6 +4,7 @@ const JSEncrypt = require('node-jsencrypt')
 const cors = require('cors')
 const fs = require('fs')
 const qrcode = require('qrcode')
+const https = require('https');
 const { Pool } = require('pg')
 
 const connection = require('./scripts/connection.js')
@@ -18,12 +19,24 @@ const {
     getStatusCode,
 } = require('http-status-codes')
 
-const WEBAPP_URL = "http://127.0.0.1:5500"
+const {
+    generateRegistrationChallenge,
+    parseRegisterRequest,
+} = require('@webauthn/server');
+
+const WEBAPP_URL = "https://127.0.0.1:5500"
 const SERVER_PORT = 3000
 const PROJECT_NAME = "clsec"
 
+const privateKey  = fs.readFileSync('../keys/ssl/server.key', 'utf8');
+const certificate = fs.readFileSync('../keys/ssl/server.cert', 'utf8');
+const sslCredentials = {key: privateKey, cert: certificate};
+
 const app = express()
-app.listen(SERVER_PORT, () => console.log('clsec started with port: ' + SERVER_PORT))
+
+https.createServer(sslCredentials, app).listen(SERVER_PORT, () => {
+    console.log('clsec started with port: ' + SERVER_PORT)
+})
 
 app.use(cors({credentials: true, origin: WEBAPP_URL}))
 
@@ -183,6 +196,14 @@ app.post('/totp/check_token', (req, res) => {
     })
 })
 
-app.post('/webauthn', (req, res) => {
-    const username = req.body.username
+app.post('/webauthn/request-register', (req, res) => {
+    const username = req.body.username;
+    const email = username + ".clsec.de"
+
+    const challengeResponse = generateRegistrationChallenge({
+        relyingParty: { name: 'clsec', id: 'https://127.0.0.1:5500' },
+        user: { id: username, name: email, displayName: username }
+    });
+
+    res.send(challengeResponse);
 })
