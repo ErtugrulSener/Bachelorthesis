@@ -17,6 +17,7 @@ export const solveRegistrationChallenge = async credentialsChallengeRequest => {
     const publicKey = registrationChallengeToPublicKey(
         credentialsChallengeRequest
     );
+
     const credentials = await navigator.credentials.create({
         publicKey,
     });

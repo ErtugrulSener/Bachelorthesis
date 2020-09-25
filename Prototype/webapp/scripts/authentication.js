@@ -1,12 +1,12 @@
-window.clsec = (function (authentication) {
+window.clsec = (function (clsec) {
     let cached_pubkey = false;
 
     const MIN_USERNAME_LENGTH = 8;
     const MIN_PASSWORD_LENGTH = 8;
 
-    authentication.SERVER_URL = "https://127.0.0.1:3000/"
+    clsec.SERVER_URL = "https://localhost:3000/"
     
-    authentication.createHash = function(text)
+    clsec.createHash = function(text)
     {
         let sha512 = new jsSHA('SHA-512', 'TEXT');
         sha512.update(password);
@@ -15,14 +15,14 @@ window.clsec = (function (authentication) {
         return sha512_password;
     }
     
-    authentication.getPublicKey = function()
+    clsec.getPublicKey = function()
     {
         if (cached_pubkey)
             return cached_pubkey;
     
         let publicKey = ""
         let xhttp = new XMLHttpRequest();
-        xhttp.open("GET", authentication.SERVER_URL + "get_public_key", false);
+        xhttp.open("GET", clsec.SERVER_URL + "get_public_key", false);
         xhttp.onreadystatechange = function ()
         {
             if (xhttp.readyState === 4 && xhttp.status == 200)
@@ -38,10 +38,10 @@ window.clsec = (function (authentication) {
         return publicKey;
     }
     
-    authentication.encryptWithPublicKey = function(text)
+    clsec.encryptWithPublicKey = function(text)
     {
         let encrypter = new JSEncrypt();
-        const pubkey = authentication.getPublicKey();
+        const pubkey = clsec.getPublicKey();
         encrypter.setPublicKey(pubkey);
         const encrypted = encrypter.encrypt(text);
     
@@ -56,8 +56,8 @@ window.clsec = (function (authentication) {
         if (userFieldValue.length < MIN_USERNAME_LENGTH || passFieldValue.length < MIN_PASSWORD_LENGTH)
             return;
     
-        let username = authentication.encryptWithPublicKey(userFieldValue)
-        let password = authentication.encryptWithPublicKey(passFieldValue)
+        let username = clsec.encryptWithPublicKey(userFieldValue)
+        let password = clsec.encryptWithPublicKey(passFieldValue)
         let xhttp = new XMLHttpRequest();
     
         xhttp.onreadystatechange = function() {
@@ -71,7 +71,7 @@ window.clsec = (function (authentication) {
             }
         };
     
-        xhttp.open("POST", authentication.SERVER_URL + "password/login");
+        xhttp.open("POST", clsec.SERVER_URL + "password/login");
         xhttp.withCredentials = true;
         xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhttp.send(JSON.stringify({"username": username, "password": password}));
@@ -101,7 +101,7 @@ window.clsec = (function (authentication) {
                 }
             };
       
-            xhttp.open("POST", authentication.SERVER_URL + "totp/check_token");
+            xhttp.open("POST", clsec.SERVER_URL + "totp/check_token");
             xhttp.withCredentials = true;
             xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xhttp.send(JSON.stringify({"username": username, "totp_token": totp_token}));
@@ -143,19 +143,19 @@ window.clsec = (function (authentication) {
                 }
             };
       
-            xhttp.open("POST", authentication.SERVER_URL + "totp/check_username");
+            xhttp.open("POST", clsec.SERVER_URL + "totp/check_username");
             xhttp.withCredentials = true;
             xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xhttp.send(JSON.stringify({"username": username}));
         }
     }
 
-    authentication.login = function()
+    clsec.login = function()
     {
         const AUTH_FUNCTIONS = {
             0: loginWithUserpass,
             1: loginWithTotp,
-            2: authentication.loginWithWebAuthentication,
+            2: clsec.loginWithWebAuthentication,
         }
 
         const method = clsec.getMethod()
@@ -164,13 +164,6 @@ window.clsec = (function (authentication) {
         if (func)
             func()
     }
-    
-    $(function() {
-        $("#submit").click(function(event) {
-            event.preventDefault();
-            authentication.login()
-        });
-    });
 
-    return authentication;
+    return clsec;
 }(window.clsec || {}));

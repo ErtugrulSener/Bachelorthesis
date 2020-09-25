@@ -6,43 +6,50 @@ import {
 window.clsec = (function (webauthn) {
     const MIN_USERNAME_LENGTH = 8
 
-    webauthn.loginWithWebAuthentication = (async () =>
+    webauthn.loginWithWebAuthentication = function()
     {
-        const username = document.getElementById("webauthn_username").value
+        console.log("login now")
+    };
 
-        if (username.length < MIN_USERNAME_LENGTH)
-            return;
-
-        const challenge = await fetch(clsec.SERVER_URL + 'webauthn/request-register', {
-            method: 'POST',
-            headers: {
-                'content-type': 'Application/Json'
-            },
-            body: JSON.stringify({ "username": username })
-        })
-        .then(response => response.json());
-
-        console.log(challenge)
-        const credentials = await solveRegistrationChallenge(challenge);
-        // console.log(credentials)
-
-        /*const { loggedIn } = await fetch(
-            'http://${clsec.SERVER_URL}/webauthn/register',
+    $(function() {
+        $('#webauthn_register_button').click(function() {
+            (async () =>
             {
-                method: 'POST',
-                headers: {
-                    'content-type': 'Application/Json'
-                },
-                body: JSON.stringify(credentials)
-            }
-        ).then(response => response.json());
-
-        if (!loggedIn) {
-            console.log("Registration failed")
-            return;
-        }*/
-
-        console.log("Registration successful")
+                const username = document.getElementById("webauthn_username").value
+        
+                if (username.length < MIN_USERNAME_LENGTH)
+                    return;
+        
+                const challenge = await fetch(clsec.SERVER_URL + 'webauthn/request-register', {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'Application/Json'
+                    },
+                    body: JSON.stringify({ "username": username })
+                })
+                .then(response => response.json());
+    
+                const credentials = await solveRegistrationChallenge(challenge);
+        
+                const { loggedIn } = await fetch(
+                    'http://${clsec.SERVER_URL}/webauthn/register',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'content-type': 'Application/Json'
+                        },
+                        body: JSON.stringify(credentials)
+                    }
+                ).then(response => response.json());
+        
+                if (!loggedIn) {
+                    console.log("Registration failed")
+                    return;
+                }
+        
+                console.log("Registration successful")
+            })()
+        })
     });
 
     return webauthn;

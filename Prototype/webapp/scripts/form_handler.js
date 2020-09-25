@@ -1,4 +1,4 @@
-window.clsec = (function (form_handler) {
+window.clsec = (function (clsec) {
     const METHODS = {
         USERPASS: 0,
         TOTP: 1,
@@ -9,29 +9,29 @@ window.clsec = (function (form_handler) {
     let formFields = {
         0: ["flexbox_userpass"],
         1: ["flexbox_totp"],
-        2: ["flexbox_webauthn"],
+        2: ["flexbox_webauthn", "webauthn_register_button"],
         3: [],
     }
 
-    form_handler.getMethod = function()
+    clsec.getMethod = function()
     {
         const method = Number(document.getElementById("method").value)
         return method
     }
 
-    form_handler.getTotpSecret = function()
+    clsec.getTotpSecret = function()
     {
         const totp_secret = document.getElementById("totp_secret").innerHTML
         return totp_secret
     }
 
-    form_handler.getTotpToken = function()
+    clsec.getTotpToken = function()
     {
         const totp_token = document.getElementById("totp_token").value
         return totp_token
     }
 
-    form_handler.getSessionCookie = function()
+    clsec.getSessionCookie = function()
     {
         const session_cookie = Cookies.get('user_sid');
         return session_cookie
@@ -44,7 +44,7 @@ window.clsec = (function (form_handler) {
         clsec.onChangeAuthenticationMethod(new_method)
     }
 
-    form_handler.onChangeAuthenticationMethod = function(value)
+    clsec.onChangeAuthenticationMethod = function(value)
     {
         refreshForm(value)
     }
@@ -56,37 +56,37 @@ window.clsec = (function (form_handler) {
             for (const elementName of elementsToShow)
             {
                 if (formFields[method].includes(elementName))
-                    form_handler.showObj(elementName)
+                    clsec.showObj(elementName)
                 else
-                    form_handler.hideObj(elementName)
+                    clsec.hideObj(elementName)
             }
         }
     }
 
-    form_handler.hideObj = function(name)
+    clsec.hideObj = function(name)
     {
         document.getElementById(name).style.display = "none"
     }
 
-    form_handler.showObj = function(name)
+    clsec.showObj = function(name)
     {
-        document.getElementById(name).style.display = "block"
+        document.getElementById(name).style.removeProperty("display")
     }
 
-    form_handler.addClass = function(name, class_name)
+    clsec.addClass = function(name, class_name)
     {
         document.getElementById(name).classList.add(class_name)
     }
 
-    form_handler.onIncreaseMethod = function()
+    clsec.onIncreaseMethod = function()
     {
-        const method = (form_handler.getMethod() + 1) % getDictLength(formFields)
+        const method = (clsec.getMethod() + 1) % getDictLength(formFields)
         setMethod(method)
     }
 
-    form_handler.onDecreaseMethod = function()
+    clsec.onDecreaseMethod = function()
     {
-        const method = (form_handler.getMethod() - 1 + getDictLength(formFields)) % getDictLength(formFields)
+        const method = (clsec.getMethod() - 1 + getDictLength(formFields)) % getDictLength(formFields)
         setMethod(method)
     }
 
@@ -100,13 +100,13 @@ window.clsec = (function (form_handler) {
 
         if (form)
         {
-            form.addEventListener("submit", function (event) {
-                event.preventDefault();
-            });
+            $('#submit').click(function() {
+                clsec.login()
+            })
 
             refreshForm()
         }
     });
 
-    return form_handler;
+    return clsec;
 }(window.clsec || {}));

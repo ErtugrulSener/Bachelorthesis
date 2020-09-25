@@ -24,7 +24,7 @@ const {
     parseRegisterRequest,
 } = require('@webauthn/server');
 
-const WEBAPP_URL = "https://127.0.0.1:5500"
+const WEBAPP_URL = "https://localhost:5500"
 const SERVER_PORT = 3000
 const PROJECT_NAME = "clsec"
 
@@ -200,10 +200,43 @@ app.post('/webauthn/request-register', (req, res) => {
     const username = req.body.username;
     const email = username + ".clsec.de"
 
-    const challengeResponse = generateRegistrationChallenge({
-        relyingParty: { name: 'clsec', id: 'https://127.0.0.1:5500' },
-        user: { id: username, name: email, displayName: username }
-    });
+    pool.query("SELECT username FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
+        if (queryErr) throw queryErr
 
-    res.send(challengeResponse);
+        if (queryRes.rows.length == 0)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
+        const challengeResponse = generateRegistrationChallenge({
+            relyingParty: { name: 'clsec', id: "localhost" },
+            user: { id: username, name: email, displayName: username }
+        });
+    
+        pool.query("UPDATE users SET webauthn_register_challenge = $1::text WHERE username = $2::text", [challengeResponse.challenge, username], (updateErr, updateRes) => {
+            if (updateErr) throw updateErr;
+        })
+    
+        res.send(challengeResponse);
+    })
 })
+
+app.post('/register', (req, res) => {
+    const { key, challenge } = parseRegisterRequest(req.body);
+
+    const user = userRepository.findByChallenge(challenge);
+
+    if (!user) {
+        sendApi(res, StatusCodes.UNAUTHORIZED)
+        return res.sendStatus(400);
+    }
+
+    userRepository.addKeyToUser(user, key);
+
+    pool.query("UPDATE users SET webauthn_private_key = $1::text WHERE webauthn_register_challenge = $2::text", [challengeResponse.challenge, username], (updateErr, updateRes) => {
+        if (updateErr) throw updateErr;
+    })
+
+    return res.send({ loggedIn: true });
+});
