@@ -151,9 +151,15 @@ window.clsec = (function (authentication) {
         }
     }
 
+    loginWithWebAuthentication = function()
+    {
+        console.log("hi")
+    }
+
     const AUTH_FUNCTIONS = {
         0: loginWithUserpass,
         1: loginWithTotp,
+        2: loginWithWebAuthentication,
     }
 
     authentication.login = function()

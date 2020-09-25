@@ -182,3 +182,7 @@ app.post('/totp/check_token', (req, res) => {
         apiSend(res, StatusCodes.OK)
     })
 })
+
+app.post('/webauthn', (req, res) => {
+    const username = req.body.username
+})
