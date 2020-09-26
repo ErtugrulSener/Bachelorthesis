@@ -21,12 +21,12 @@ window.clsec = (function (webauthn) {
             body: JSON.stringify({ "username": username })
         })
         .then(response => response.json());
-        console.log(challenge)
 
         const credentials = await solveLoginChallenge(challenge);
         const { loggedIn } = await fetch(clsec.SERVER_URL + 'webauthn/login', 
             {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'content-type': 'Application/Json'
                 },
@@ -34,12 +34,10 @@ window.clsec = (function (webauthn) {
             }
         ).then(response => response.json());
     
-        if (!loggedIn) {
-            console.log("Login failed")
+        if (!loggedIn)
             return;
-        }
 
-        console.log("Login successful")
+        window.location.replace("/webapp/secret_panel.html");
     };
 
     $(function() {

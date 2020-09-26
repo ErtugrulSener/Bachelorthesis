@@ -6,7 +6,6 @@ export const publicKeyCredentialToJSON = (
     }
 
     if (item instanceof ArrayBuffer) {
-        const { Unibabel } = require('unibabel');
         // ArrayBuffer must be converted to typed arrays
         return Unibabel.bufferToBase64(new Uint8Array(item));
     }

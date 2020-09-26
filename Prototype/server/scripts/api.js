@@ -1,6 +1,11 @@
 const { getReasonPhrase } = require("http-status-codes");
 const { v4: uuidv4 } = require('uuid')
-const Cookies = require('cookies')
+
+let setCookieOptions = {
+    maxAge: 1000 * 60 * 60 * 24,
+    httpOnly: false,
+    secure: true,
+}
 
 exports.apiSend = function(res, status_code, status_message) {
     res.status(status_code).send(JSON.stringify({
@@ -9,15 +14,10 @@ exports.apiSend = function(res, status_code, status_message) {
     }));
 }
 
-exports.createSessionCookie = function(req, res) {
-    let cookieHandler = new Cookies(req, res)
-    cookieHandler.set('user_sid', uuidv4(), {httpOnly: false})
+exports.createSessionCookie = async function(req, res) {
+    res.cookie('user_sid', uuidv4(), setCookieOptions)
 }
 
 exports.clearSessionCookie = function(req, res) {
-    let cookieHandler = new Cookies(req, res)
-
-    if (cookieHandler.get("user_sid")) {
-        cookieHandler.set('user_sid', '', {httpOnly: false, overwrite: true})
-    }
+    res.clearCookie('user_sid')
 }

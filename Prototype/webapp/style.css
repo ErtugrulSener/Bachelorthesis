@@ -25,6 +25,11 @@ html body {
     padding: 8px;
 }
 
+.flexbox_totp {
+    height: 40px;
+    overflow: hidden;
+}
+
 .totp_qr_image {
     display: none;
 }
@@ -37,11 +42,12 @@ html body {
 }
 
 .totp_secret {
-    text-align: center;
     margin-bottom: 10px;
+    width: 190px;
+    text-align: center;
 }
 
-._hidden {
+.totp_token {
     display: none;
 }
 

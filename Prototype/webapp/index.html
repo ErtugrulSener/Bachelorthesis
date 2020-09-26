@@ -46,11 +46,11 @@
                         <input class="form-control" type="text" id="username" name="username" placeholder="Benutzername" pattern=".{8,}" title="Mindestens 8 Zeichen" minlength=8 required /><br>
                         <input class="form-control" type="password" id="password" name="password" placeholder="Passwort" pattern=".{8,}" title="Mindestens 8 Zeichen" minlength=8 required />
                     </div>
-                    <div id="flexbox_totp" class="form-group">
+                    <div id="flexbox_totp" class="flexbox_totp form-group">
                         <input class="form-control" type="text" id="totp_username" name="totp_username" placeholder="Benutzername" pattern=".{8,}" title="Mindestens 8 Zeichen" minlength=8 required /><br>
-                        <img id="totp_qr_image" class="totp_qr_image" />
-                        <a id="totp_secret" class="totp_secret"></a>
-                        <input class="_hidden" type="text" id="totp_token" name="totp_token" placeholder="Sechsstelliger TOTP-Token" pattern=".{6,}" title="Mindestens 6 Zeichen" minlength=6 required /><br>
+                        <img id="totp_qr_image" class="totp_qr_image" /><br>
+                        <a id="totp_secret" class="totp_secret"></a><br>
+                        <input id="totp_token" class="totp_token" type="text" name="totp_token" placeholder="Sechsstelliger TOTP-Token" pattern=".{6,}" title="Mindestens 6 Zeichen" minlength=6 required /><br>
                     </div>
                     <div id="flexbox_webauthn" class="form-group">
                         <input class="form-control" type="text" value="ertugrulsener" id="webauthn_username" name="webauthn_username" placeholder="Benutzername" pattern=".{8,}" title="Mindestens 8 Zeichen" minlength=8 required /><br>
@@ -64,7 +64,7 @@
                         <option class="form-check-label" value=0>Passwort</option>
                         <option class="form-check-label" value=1>Time Based OTP</option>
                         <option class="form-check-label" value=2>Web Authentication</option>
-                        <option class="form-check-label" value=3>Clientless Login</option>
+                        <!--<option class="form-check-label" value=3>Clientless Login</option>-->
                     </select>
                     <button type="button" class="btn btn-default" aria-label="Left Align" onclick="clsec.onIncreaseMethod()">
                         <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>

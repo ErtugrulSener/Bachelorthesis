@@ -10,7 +10,6 @@ window.clsec = (function (clsec) {
         0: ["flexbox_userpass"],
         1: ["flexbox_totp"],
         2: ["flexbox_webauthn", "webauthn_register_button"],
-        3: [],
     }
 
     clsec.getMethod = function()
@@ -70,12 +69,17 @@ window.clsec = (function (clsec) {
 
     clsec.showObj = function(name)
     {
-        document.getElementById(name).style.removeProperty("display")
+        document.getElementById(name).style.display = "inline-block"
     }
 
     clsec.addClass = function(name, class_name)
     {
         document.getElementById(name).classList.add(class_name)
+    }
+
+    clsec.removeClass = function(name, class_name)
+    {
+        document.getElementById(name).classList.remove(class_name)
     }
 
     clsec.onIncreaseMethod = function()
@@ -100,6 +104,11 @@ window.clsec = (function (clsec) {
 
         if (form)
         {
+            $('#main_form').submit(function(event) {
+                event.preventDefault()
+                return false
+            })
+
             $('#submit').click(function() {
                 clsec.login()
             })

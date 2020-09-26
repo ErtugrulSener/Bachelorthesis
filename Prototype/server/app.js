@@ -7,6 +7,7 @@ const qrcode = require('qrcode')
 const https = require('https');
 const url = require('url');
 const { Pool } = require('pg')
+const async = require("async");
 
 const connection = require('./scripts/connection.js')
 const { apiSend, createSessionCookie, clearSessionCookie } = require('./scripts/api.js')
@@ -121,7 +122,7 @@ function createTotpAuthenticationUrl(username,  totp_secret, req, res)
             if (updateErr) throw updateErr;
         })
 
-        apiSend(res, StatusCodes.UNAUTHORIZED, {'otpauth': otpauth, 'imageUrl': imageUrl, 'secret': secret})
+        apiSend(res, StatusCodes.OK, {'otpauth': otpauth, 'imageUrl': imageUrl, 'secret': secret})
     })
 }
 
@@ -148,7 +149,7 @@ app.post('/totp/check_username', (req, res) => {
 
         if (totp_activated === 1)
         {
-            apiSend(res, StatusCodes.OK)
+            apiSend(res, StatusCodes.OK, "Success")
             return;
         }
 
@@ -204,10 +205,16 @@ app.post('/webauthn/request-register', (req, res) => {
     const username = req.body.username;
     const email = username + ".clsec.de"
 
-    pool.query("SELECT username FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
+    pool.query("SELECT webauthn_private_key, username FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
+        if (queryRes.rows[0].webauthn_private_key)
         {
             apiSend(res, StatusCodes.UNAUTHORIZED)
             return
@@ -237,7 +244,7 @@ app.post('/webauthn/register', (req, res) => {
         return
     }
 
-    pool.query("SELECT username FROM users WHERE webauthn_register_challenge = $1::text", [challenge], (queryErr, queryRes) => {
+    pool.query("SELECT webauthn_private_key, username FROM users WHERE webauthn_register_challenge = $1::text", [challenge], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
@@ -246,9 +253,15 @@ app.post('/webauthn/register', (req, res) => {
             return
         }
 
+        if (queryRes.rows[0].webauthn_private_key)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
         const username = queryRes.rows[0].username
 
-        pool.query("UPDATE users SET webauthn_private_key = $1::text WHERE username = $2::text", [key, username], (updateErr, updateRes) => {
+        pool.query("UPDATE users SET webauthn_private_key = $1 WHERE username = $2::text", [key, username], (updateErr, updateRes) => {
             if (updateErr) throw updateErr;
         })
 
@@ -300,18 +313,22 @@ app.post('/webauthn/login', (req, res) => {
         if (queryRes.rows.length == 0)
         {
             apiSend(res, StatusCodes.UNAUTHORIZED)
-            
+            return
         }
 
         const webauthn_private_key = queryRes.rows[0].webauthn_private_key
 
-        if (webauthn_private_key !== keyId)
+        if (webauthn_private_key.credID !== keyId)
         {
             apiSend(res, StatusCodes.UNAUTHORIZED)
             return
         }
 
         const loggedIn = verifyAuthenticatorAssertion(req.body, webauthn_private_key);
-        res.send({ loggedIn });
+
+        if (loggedIn) {
+            createSessionCookie(req, res)
+            res.send({ loggedIn });
+        }
     })
 });
