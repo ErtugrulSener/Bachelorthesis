@@ -5,6 +5,7 @@ const cors = require('cors')
 const fs = require('fs')
 const qrcode = require('qrcode')
 const https = require('https');
+const url = require('url');
 const { Pool } = require('pg')
 
 const connection = require('./scripts/connection.js')
@@ -24,6 +25,7 @@ const {
     parseRegisterRequest,
     generateLoginChallenge,
     parseLoginRequest,
+    verifyAuthenticatorAssertion,
 } = require('@webauthn/server');
 
 const WEBAPP_URL = "https://localhost:5500"
@@ -211,8 +213,10 @@ app.post('/webauthn/request-register', (req, res) => {
             return
         }
 
+        var hostname = url.parse(WEBAPP_URL, true).hostname
+
         const challengeResponse = generateRegistrationChallenge({
-            relyingParty: { name: 'clsec', id: "localhost" },
+            relyingParty: { name: PROJECT_NAME, id: hostname },
             user: { id: username, name: email, displayName: username }
         });
     
@@ -224,8 +228,14 @@ app.post('/webauthn/request-register', (req, res) => {
     })
 })
 
-app.post('/register', (req, res) => {
+app.post('/webauthn/register', (req, res) => {
     const { key, challenge } = parseRegisterRequest(req.body);
+
+    if (!challenge)
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED)
+        return
+    }
 
     pool.query("SELECT username FROM users WHERE webauthn_register_challenge = $1::text", [challenge], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
@@ -242,6 +252,66 @@ app.post('/register', (req, res) => {
             if (updateErr) throw updateErr;
         })
 
-        return res.send({ loggedIn: true });
+        res.send({ loggedIn: true });
+    })
+});
+
+app.post('/webauthn/request-login', (req, res) => {
+    const username = req.body.username;
+
+    if (!username)
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED)
+        return
+    }
+
+    pool.query("SELECT webauthn_private_key FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
+        if (queryErr) throw queryErr
+
+        if (queryRes.rows.length == 0)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
+        const webauthn_private_key = queryRes.rows[0].webauthn_private_key
+        const assertionChallenge = generateLoginChallenge(webauthn_private_key);
+
+        pool.query("UPDATE users SET webauthn_login_challenge = $1::text WHERE username = $2::text", [assertionChallenge.challenge, username], (updateErr, updateRes) => {
+            if (updateErr) throw updateErr;
+        })
+
+        res.send(assertionChallenge);
+    })
+});
+
+app.post('/webauthn/login', (req, res) => {
+    const { challenge, keyId } = parseLoginRequest(req.body);
+
+    if (!challenge)
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED)
+        return
+    }
+
+    pool.query("SELECT webauthn_private_key FROM users WHERE webauthn_login_challenge = $1::text", [challenge], (queryErr, queryRes) => {
+        if (queryErr) throw queryErr
+
+        if (queryRes.rows.length == 0)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            
+        }
+
+        const webauthn_private_key = queryRes.rows[0].webauthn_private_key
+
+        if (webauthn_private_key !== keyId)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
+        const loggedIn = verifyAuthenticatorAssertion(req.body, webauthn_private_key);
+        res.send({ loggedIn });
     })
 });
