@@ -46,6 +46,35 @@ Die folgende Tabelle soll vergleichend die Gemeinsamkeiten, aber auch Vor und Na
 \includegraphics[width=15cm]{Tmp.png}
 
 \subsection{WebAuthn}
-Webauthn ist kurz für die 'Web Authentication'. Zur Verfügung gestellt wurde dieser Standard der Authentifikation 2018 von der FIDO Alliance und dem W3C. \cite{A7} Sie ermöglicht eine passwortlose (bzw. benutzerdatenlose, es wird also auch keine User-ID benötigt) Authentifikation durch Tokens (Sicherheitsschlüssel). Für dieses Verfahren wird zunächst ein Buffer aus kryptografischen random Bytes generiert, das der Verhinderung von 'Bruteforce' (vom webauthn - Guide auch als 'reply attacks' beschrieben) - Angriffen dienen soll. Web Authentication nutzt das vorhandene public-key-Verfahren für Webseiten. Der Standard definiert allerdings nicht welche Art von Schlüssel genutzt wird. Unter den Möglichkeiten zählen der "USB security key" \cite{A7} oder der "built-in fingerprint sensor" \cite{A7}. Webauthn basiert auf vielen bereits vorhandenen Abhängigkeiten der Informatik wie die Standards von HTML5, ECMAScript, COSE (CBOR Object Signing and Encryption COSE, RFC8152) oder dem Nutzen von der Base64url encoding.
+Webauthn ist kurz für die 'Web Authentication'. Zur Verfügung gestellt wurde dieser Standard der Authentifikation 2018 von der FIDO Alliance und dem W3C und ist vollumfänglich im FIDO2 Standard definiert. [A13] Sie ermöglicht eine passwortlose Authentifikation durch die Nutzung des vorhandenen public-key-Verfahrens für Webseiten.
+
+Der Standard definiert verschiedene Arten von Authentifikationsmöglichkeiten. Neben sogenannten ``plattform authenticators`` [13] also jenen Verfahren, die die geräteeigenen Sicherheitsfeatures wie den Fingerabdrucksensor oder der Gesichtserkennung durch eine Kamera nutzen, definiert der Standard auch die Authentifizierung durch externe Geräte wie USB-Sticks, auf denen sich der private Schlüssel des Nutzers (in gesicherter Form) befindet. Grundsätzlich definiert WebAuthn nur Dinge, die man im nativen Bereich bereits kennt, adaptiert diese allerdings für den Webbereich. Dabei basiert Webauthn auf vielen bereits vorhandenen Abhängigkeiten der Informatik wie die Standards von HTML5, ECMAScript, COSE (CBOR Object Signing and Encryption COSE, definiert im RFC8152) oder dem Nutzen von der Base64url encoding.
+\newpage
+
+Laut dem W3C sei die grundsätzliche Idee hinter diesem Verfahren, dass die Daten des Users zu keinem Zeitpunkt den Rechner verlassen müssen. Die Daten werden vollumfänglich vom jeweiligen Authenticator gemanaged, welches dann mit einer sogenannten 'Relying Party' interagiert um den Nutzer zu authentifizieren. Eine Relying Party ist grob vereinfacht eine Entität, welche die Web Authentication API nutzt um den Nutzer zunächst einmal zu registrieren und in Zukunft zu authentifizieren. [13]
+
+Auf einer von Codegram organisierten Rede von Suby Raman, einem der Mitentwickler des Web-Authentication-Protokolls und dem Hauptentwickler für Windows Hello, erläutert Raman die Probleme von Passwörtern, die im Rahmen dieser Arbeit im Kapitel der Einleitung bereits addressiert worden, und wie WebAuthn diese löst.
+
+\begin{enumerate} 
+\item \textbf{Passwörter sind geteilte Geheimnisse.}
+
+Der ausgetauschte öffentliche Schlüssel ist kein Geheimnis, der private Schlüssel bleibt stets auf dem Gerät des Nutzers und verlässt diesen zu keinem Zeitpunkt der Authentifikation.
+
+\item \textbf{Sichere Passwörter sind schwer zu finden und wenn, dann sind sie nicht leicht merkbar.}
+
+Der Authenticator auf den Geräten des Nutzers erstellt zufällige und sichere 'credentials' für die Authentifikation. Es liegt nicht mehr in der Verantwortung des Nutzers dies zu tun.
+
+\item \textbf{Passwörter können leicht entwendet werden.}
+
+Sichere interne (oder auch externe) Hardware macht es Angreifern sehr schwer, wenn nicht schon fast mathematisch unmöglich, durch physische Angriffe an die privaten Schlüssel zu kommen. Zum Verfassungszeitpunkt dieser Arbeie sind keine Angriffe auf diese Geräte bekannt, vereinzelt gibt es dennoch Angriffe auf die Software der Hersteller, die sich auf den Geräten vorinstalliert befindet.
+
+\item \textbf{Passwörter haben ein Bequemlichkeitsproblem und sorgen automatisch für die unsichere Wahl dessen.}
+
+Die 'credentials' des Nutzers sind gebunden an den aktuellen Scope des Nutzers. Das heißt das jede Anfrage einzigartig, sowohl für die Registrierung als auch den späteren Login. Der erwähnte Wiederholungsangriff im Kapitel für Unsichere Passwörter wird damit verhindert. Ein mehrmaliges Nutzen der erstellten zufälligen Daten durch den Authenticator ist damit nicht möglich und nur für eine Anfrage valide.
+
+\item \textbf{Aus Sicht der Entwickler sind Passwörter schwer zu sichern.}
+
+Das der öffentliche Schlüssel kein Geheimnis darstellt, hat dieser auch keinen besonderen Wert und kann problemlos im Klartext in Datenbanken persistiert werden.
+\end{enumerate}
 
 Zusammengefasst hat der FIDO2 Standard mit CTAP (dem Protokoll für externe Authentifikationen mit Mobilgeräten) und Webauthn (der Schnittstelle bzw. "API") vorhandene Funktionen definiert, mit der native Authentifizierungsmethoden wie das public-private Key Verfahren auf die Webseite übertragen werden können. Wichtige Beispiele für Web Authentication sind der Yubikey, der USB-Token oder unsere biometrischen Daten (FaceID oder TouchID), die wir täglich in jedem AppStore nutzen, der diese Daten verschlüsselt an eine Webseite bzw. einen öffentlichen Store übermittelt. In unserem Use-Case wollen wir die Authentifizierung anhand von Webauthn als Multi-Faktor nutzen, also als zusätzliche Sicherung neben einem Passwort. Denn wie oben beschrieben, kann das Wissen eines Menschen durch Data Breaches oder menschliches Versagen (Gutglauben) leicht abhanden kommen. Mit einem Yubikey oder einem USB-Token befindet man sich allerdings auf der Ebene des Besitzes, wodurch ein potenzieller Angreifer es schwerer hat an die Daten zu kommen. Biometrische Daten und diese public-private-Key Verfahren gelten nämlich allgemein als sehr sicher. Wodurch es technisch sehr schwer bis mathematisch (in gegebener Menschenzeit) fast unmöglich ist, die Algorithmen hinter ihnen zu knacken.
