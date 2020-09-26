@@ -1,6 +1,6 @@
 exports.getConnectionDetails = function() {
     return {
-        host: process.env.PGHOST || '127.0.0.1',
+        host: process.env.PGHOST || 'localhost',
         user: process.env.PGUSER || 'postgres',
         password: process.env.PGPASSWORD ||'clsec',
         database: process.env.PGDATABASE ||'postgres',

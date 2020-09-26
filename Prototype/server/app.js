@@ -22,6 +22,8 @@ const {
 const {
     generateRegistrationChallenge,
     parseRegisterRequest,
+    generateLoginChallenge,
+    parseLoginRequest,
 } = require('@webauthn/server');
 
 const WEBAPP_URL = "https://localhost:5500"
@@ -225,18 +227,21 @@ app.post('/webauthn/request-register', (req, res) => {
 app.post('/register', (req, res) => {
     const { key, challenge } = parseRegisterRequest(req.body);
 
-    const user = userRepository.findByChallenge(challenge);
+    pool.query("SELECT username FROM users WHERE webauthn_register_challenge = $1::text", [challenge], (queryErr, queryRes) => {
+        if (queryErr) throw queryErr
 
-    if (!user) {
-        sendApi(res, StatusCodes.UNAUTHORIZED)
-        return res.sendStatus(400);
-    }
+        if (queryRes.rows.length == 0)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
 
-    userRepository.addKeyToUser(user, key);
+        const username = queryRes.rows[0].username
 
-    pool.query("UPDATE users SET webauthn_private_key = $1::text WHERE webauthn_register_challenge = $2::text", [challengeResponse.challenge, username], (updateErr, updateRes) => {
-        if (updateErr) throw updateErr;
+        pool.query("UPDATE users SET webauthn_private_key = $1::text WHERE username = $2::text", [key, username], (updateErr, updateRes) => {
+            if (updateErr) throw updateErr;
+        })
+
+        return res.send({ loggedIn: true });
     })
-
-    return res.send({ loggedIn: true });
 });
