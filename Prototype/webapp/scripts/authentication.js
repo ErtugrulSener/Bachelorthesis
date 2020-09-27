@@ -61,13 +61,17 @@ window.clsec = (function (clsec) {
         let xhttp = new XMLHttpRequest();
     
         xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200)
+            if (this.readyState == 4)
             {
-                window.location.replace("/webapp/secret_panel.html");
-            }
-            else
-            {
-                console.log(this.responseText)
+                if (this.status == 200)
+                {
+
+                    window.location.replace("/secret_panel.html");
+                }
+                else
+                {
+                    console.log(this.responseText)
+                }
             }
         };
     
@@ -91,13 +95,16 @@ window.clsec = (function (clsec) {
         if (document.getElementById("totp_secret").style.display === "none")
         {
             xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200)
+                if (this.readyState == 4)
                 {
-                    window.location.replace("/webapp/secret_panel.html");
-                }
-                else
-                {
-                    console.log(this.responseText)
+                    if (this.status == 200)
+                    {
+                        window.location.replace("/secret_panel.html");
+                    }
+                    else
+                    {
+                        console.log(this.responseText)
+                    }
                 }
             };
       
@@ -109,37 +116,40 @@ window.clsec = (function (clsec) {
         else
         {
             xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200)
+                if (this.readyState == 4)
                 {
-                    const res = JSON.parse(this.responseText)
-
-                    if (res.msg === "Success")
+                    if (this.status == 200)
                     {
-                        clsec.hideObj("totp_qr_image")
-                        clsec.hideObj("totp_secret")
+                        const res = JSON.parse(this.responseText)
+
+                        if (res.msg === "Success")
+                        {
+                            clsec.hideObj("totp_qr_image")
+                            clsec.hideObj("totp_secret")
+                        }
+                        else
+                        {
+                            let flexbox_totp = document.getElementById("flexbox_totp")
+                            let totp_qr_image = document.getElementById("totp_qr_image")
+                            let totp_secret = document.getElementById("totp_secret")
+            
+                            totp_qr_image.src = res.msg.imageUrl;
+                            clsec.showObj("totp_qr_image")
+            
+                            totp_secret.innerHTML = res.msg.secret
+                            totp_secret.href = res.msg.otpauth
+                            clsec.showObj("totp_secret")
+                        }
+    
+                        clsec.addClass("totp_token", "form-control");
+                        clsec.showObj("totp_token")
+    
+                        clsec.removeClass("flexbox_totp", "flexbox_totp")
                     }
                     else
                     {
-                        let flexbox_totp = document.getElementById("flexbox_totp")
-                        let totp_qr_image = document.getElementById("totp_qr_image")
-                        let totp_secret = document.getElementById("totp_secret")
-        
-                        totp_qr_image.src = res.msg.imageUrl;
-                        clsec.showObj("totp_qr_image")
-        
-                        totp_secret.innerHTML = res.msg.secret
-                        totp_secret.href = res.msg.otpauth
-                        clsec.showObj("totp_secret")
+                        console.log(this.responseText)
                     }
-
-                    clsec.addClass("totp_token", "form-control");
-                    clsec.showObj("totp_token")
-
-                    clsec.removeClass("flexbox_totp", "flexbox_totp")
-                }
-                else
-                {
-                    console.log(this.responseText)
                 }
             };
       

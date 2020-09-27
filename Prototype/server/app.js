@@ -102,7 +102,7 @@ app.get('/password/create_password_hash', (req, res) => {
 
 app.post('/logout', (req, res) => {
     clearSessionCookie(req, res)
-    res.redirect(WEBAPP_URL + '/webapp/index.html');
+    res.redirect(WEBAPP_URL + '/index.html');
 })
 
 app.get('/get_public_key', (req, res) => {
@@ -131,7 +131,7 @@ app.post('/totp/check_username', (req, res) => {
 
     if (!username)
     {
-        apiSend(res, StatusCodes.UNAUTHORIZED)
+        apiSend(res, StatusCodes.UNAUTHORIZED, "Username oder Passwort falsch")
         return
     }
 
@@ -140,7 +140,7 @@ app.post('/totp/check_username', (req, res) => {
 
         if (queryRes.rows.length == 0)
         {
-            apiSend(res, StatusCodes.UNAUTHORIZED)
+            apiSend(res, StatusCodes.UNAUTHORIZED, "Username oder Passwort falsch")
             return
         }
 

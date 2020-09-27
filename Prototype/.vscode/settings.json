@@ -1,6 +1,7 @@
 {
 	"liveServer.settings.multiRootWorkspaceName": "Prototype",
 	"liveServer.settings.host": "localhost",
+	"liveServer.settings.root": "/webapp",
 	"liveServer.settings.https": {
 		"enable": true,
 		"cert": "C:\\Users\\Lead0\\Desktop\\Bachelorarbeit\\Prototype\\keys\\ssl\\server.cert",

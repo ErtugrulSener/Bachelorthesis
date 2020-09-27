@@ -20,9 +20,16 @@ window.clsec = (function (webauthn) {
             },
             body: JSON.stringify({ "username": username })
         })
-        .then(response => response.json());
+        .then(response => response.json())
+        .catch(error => {
+            return Promise.reject(error.message)
+        });
 
-        const credentials = await solveLoginChallenge(challenge);
+        const credentials = await solveLoginChallenge(challenge)
+        .catch(error => {
+            return Promise.reject(error.message)
+        });
+
         const { loggedIn } = await fetch(clsec.SERVER_URL + 'webauthn/login', 
             {
                 method: 'POST',
@@ -32,12 +39,15 @@ window.clsec = (function (webauthn) {
                 },
                 body: JSON.stringify(credentials)
             }
-        ).then(response => response.json());
+        ).then(response => response.json())
+        .catch(error => {
+            return Promise.reject(error.message)
+        });
     
         if (!loggedIn)
             return;
 
-        window.location.replace("/webapp/secret_panel.html");
+        window.location.replace("/secret_panel.html");
     };
 
     $(function() {
@@ -56,9 +66,15 @@ window.clsec = (function (webauthn) {
                     },
                     body: JSON.stringify({ "username": username })
                 })
-                .then(response => response.json());
+                .then(response => response.json())
+                .catch(error => {
+                    return Promise.reject(error.message)
+                });
     
-                const credentials = await solveRegistrationChallenge(challenge);
+                const credentials = await solveRegistrationChallenge(challenge)
+                .catch(error => {
+                    return Promise.reject(error.message)
+                });
         
                 const { loggedIn } = await fetch(clsec.SERVER_URL + 'webauthn/register',
                     {
@@ -68,7 +84,10 @@ window.clsec = (function (webauthn) {
                         },
                         body: JSON.stringify(credentials)
                     }
-                ).then(response => response.json());
+                ).then(response => response.json())
+                .catch(error => {
+                    return Promise.reject(error.message)
+                });
         
                 if (!loggedIn) {
                     console.log("Registration failed")
