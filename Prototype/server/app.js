@@ -5,7 +5,6 @@ const cors = require('cors')
 const fs = require('fs')
 const qrcode = require('qrcode')
 const https = require('https');
-const url = require('url');
 const { Pool } = require('pg')
 const { authenticator } = require('otplib');
 
@@ -22,14 +21,6 @@ const {
     getReasonPhrase,
     getStatusCode,
 } = require('http-status-codes')
-
-const {
-    generateRegistrationChallenge,
-    parseRegisterRequest,
-    generateLoginChallenge,
-    parseLoginRequest,
-    verifyAuthenticatorAssertion,
-} = require('@webauthn/server');
 
 const connection = require('./scripts/connection.js')
 const { apiSend, createSessionCookie, clearSessionCookie } = require('./scripts/api.js')
@@ -231,10 +222,14 @@ app.get('/webauthn/generate-attestation-options', (req, res) => {
             rpId: WEBAPP_ORIGIN,
             userID: queryRes.rows[0].id,
             userName: username,
-            attestationType: 'direct',
+            userDisplayName: username,
+            attestationType: 'none',
+            authenticatorSelection: {
+                requireResidentKey: false,
+                userVerification: "discouraged",
+            },
             extensions: {
-                uvi: true,
-                uvm: true
+                txAuthSimple: ""
             }
         });
     
@@ -312,6 +307,9 @@ app.get('/webauthn/generate-assertion-options', (req, res) => {
         const credentialID = queryRes.rows[0].webauthn_private_key.credentialID
 
         const options = generateAssertionOptions({
+            extensions: {
+                txAuthSimple: "",
+            },
             allowedCredentialIDs: [credentialID],
           });
     
