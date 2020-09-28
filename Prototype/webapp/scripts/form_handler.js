@@ -6,7 +6,7 @@ window.clsec = (function (clsec) {
         CLIENTLESS: 3,
     }
 
-    let formFields = {
+    const formFields = {
         0: ["flexbox_userpass"],
         1: ["flexbox_totp"],
         2: ["flexbox_webauthn", "webauthn_register_button"],
@@ -64,8 +64,8 @@ window.clsec = (function (clsec) {
                             continue
                         }
 
-                        let UVPAA = async() => {
-                            let result = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                        const UVPAA = async() => {
+                            const result = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
                             return result;
                         }
 

@@ -7,12 +7,14 @@ const qrcode = require('qrcode')
 const https = require('https');
 const url = require('url');
 const { Pool } = require('pg')
-const async = require("async");
-
-const connection = require('./scripts/connection.js')
-const { apiSend, createSessionCookie, clearSessionCookie } = require('./scripts/api.js')
-const { hashString } = require('./scripts/hashing.js')
 const { authenticator } = require('otplib');
+
+const {
+    generateAttestationOptions,
+    verifyAttestationResponse,
+    generateAssertionOptions,
+    verifyAssertionResponse,
+  } = require('@simplewebauthn/server');
 
 const {
     ReasonPhrases,
@@ -29,7 +31,12 @@ const {
     verifyAuthenticatorAssertion,
 } = require('@webauthn/server');
 
-const WEBAPP_URL = "https://localhost:5500"
+const connection = require('./scripts/connection.js')
+const { apiSend, createSessionCookie, clearSessionCookie } = require('./scripts/api.js')
+const { hashString } = require('./scripts/hashing.js')
+
+const WEBAPP_ORIGIN = "localhost"
+const WEBAPP_URL = "https://" + WEBAPP_ORIGIN + ":5500"
 const SERVER_PORT = 3000
 const PROJECT_NAME = "clsec"
 
@@ -112,7 +119,7 @@ app.get('/get_public_key', (req, res) => {
 
 function createTotpAuthenticationUrl(username,  totp_secret, req, res)
 {
-    let secret = totp_secret || authenticator.generateSecret();
+    const secret = totp_secret || authenticator.generateSecret();
     const otpauth = authenticator.keyuri(username, PROJECT_NAME, secret);
         
     qrcode.toDataURL(otpauth, (err, imageUrl) => {
@@ -201,44 +208,10 @@ app.post('/totp/check_token', (req, res) => {
     })
 })
 
-app.post('/webauthn/request-register', (req, res) => {
-    const username = req.body.username;
-    const email = username + ".clsec.de"
+app.get('/webauthn/generate-attestation-options', (req, res) => {
+    const username = req.query.username
 
-    pool.query("SELECT webauthn_private_key, username FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
-        if (queryErr) throw queryErr
-
-        if (queryRes.rows.length == 0)
-        {
-            apiSend(res, StatusCodes.UNAUTHORIZED)
-            return
-        }
-
-        var hostname = url.parse(WEBAPP_URL, true).hostname
-
-        const challengeResponse = generateRegistrationChallenge({
-            relyingParty: { name: PROJECT_NAME, id: hostname },
-            user: { id: username, name: email, displayName: username }
-        });
-
-        pool.query("UPDATE users SET webauthn_register_challenge = $1::text WHERE username = $2::text", [challengeResponse.challenge, username], (updateErr, updateRes) => {
-            if (updateErr) throw updateErr;
-        })
-    
-        res.send(challengeResponse);
-    })
-})
-
-app.post('/webauthn/register', (req, res) => {
-    const { key, challenge } = parseRegisterRequest(req.body);
-
-    if (!challenge)
-    {
-        apiSend(res, StatusCodes.UNAUTHORIZED)
-        return
-    }
-
-    pool.query("SELECT webauthn_private_key, username FROM users WHERE webauthn_register_challenge = $1::text", [challenge], (queryErr, queryRes) => {
+    pool.query("SELECT id, webauthn_private_key FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
@@ -253,26 +226,31 @@ app.post('/webauthn/register', (req, res) => {
             return
         }
 
-        const username = queryRes.rows[0].username
-
-        pool.query("UPDATE users SET webauthn_private_key = $1 WHERE username = $2::text", [key, username], (updateErr, updateRes) => {
+        const options = generateAttestationOptions({
+            rpName: PROJECT_NAME,
+            rpId: WEBAPP_ORIGIN,
+            userID: queryRes.rows[0].id,
+            userName: username,
+            attestationType: 'direct',
+            extensions: {
+                uvi: true,
+                uvm: true
+            }
+        });
+    
+        pool.query("UPDATE users SET webauthn_register_challenge = $1::text WHERE username = $2::text", [options.challenge, username], (updateErr, updateRes) => {
             if (updateErr) throw updateErr;
         })
 
-        res.send({ loggedIn: true });
+        res.send(options)
     })
-});
+})
 
-app.post('/webauthn/request-login', (req, res) => {
-    const username = req.body.username;
+app.post('/webauthn/verify-attestation', (req, res) => {
+    const username = req.body.username
+    const attResp = req.body.attResp
 
-    if (!username)
-    {
-        apiSend(res, StatusCodes.UNAUTHORIZED)
-        return
-    }
-
-    pool.query("SELECT webauthn_private_key FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
+    pool.query("SELECT webauthn_register_challenge, webauthn_private_key FROM users WHERE username = $1::text", [username], async (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
@@ -281,34 +259,42 @@ app.post('/webauthn/request-login', (req, res) => {
             return
         }
 
-        const webauthn_private_key = queryRes.rows[0].webauthn_private_key
-
-        if (!webauthn_private_key)
+        if (queryRes.rows[0].webauthn_private_key)
         {
             apiSend(res, StatusCodes.UNAUTHORIZED)
             return
         }
 
-        const assertionChallenge = generateLoginChallenge(webauthn_private_key);
+        const expectedChallenge = queryRes.rows[0].webauthn_register_challenge
 
-        pool.query("UPDATE users SET webauthn_login_challenge = $1::text WHERE username = $2::text", [assertionChallenge.challenge, username], (updateErr, updateRes) => {
+        const verification = await verifyAttestationResponse({
+                credential: attResp,
+                expectedChallenge,
+                expectedOrigin: WEBAPP_URL,
+                expectedRPID: WEBAPP_ORIGIN,
+            })
+
+        const { verified, authenticatorInfo } = verification;
+        const { base64PublicKey, base64CredentialID, counter } = authenticatorInfo;
+        
+        const Authenticator = {
+            credentialID: base64CredentialID,
+            publicKey: base64PublicKey,
+            counter,
+        };
+
+        pool.query("UPDATE users SET webauthn_private_key = $1 WHERE username = $2::text", [Authenticator, username], (updateErr, updateRes) => {
             if (updateErr) throw updateErr;
         })
 
-        res.send(assertionChallenge);
+        res.send( { verified });
     })
-});
+})
 
-app.post('/webauthn/login', (req, res) => {
-    const { challenge, keyId } = parseLoginRequest(req.body);
+app.get('/webauthn/generate-assertion-options', (req, res) => {
+    const username = req.query.username
 
-    if (!challenge)
-    {
-        apiSend(res, StatusCodes.UNAUTHORIZED)
-        return
-    }
-
-    pool.query("SELECT webauthn_private_key FROM users WHERE webauthn_login_challenge = $1::text", [challenge], (queryErr, queryRes) => {
+    pool.query("SELECT id, webauthn_private_key FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
@@ -317,25 +303,64 @@ app.post('/webauthn/login', (req, res) => {
             return
         }
 
+        if (!queryRes.rows[0].webauthn_private_key)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
+        const credentialID = queryRes.rows[0].webauthn_private_key.credentialID
+
+        const options = generateAssertionOptions({
+            allowedCredentialIDs: [credentialID],
+          });
+    
+        pool.query("UPDATE users SET webauthn_login_challenge = $1::text WHERE username = $2::text", [options.challenge, username], (updateErr, updateRes) => {
+            if (updateErr) throw updateErr;
+        })
+
+        res.send(options)
+    })
+})
+
+app.post('/webauthn/verify-assertion', (req, res) => {
+    const username = req.body.username
+    const attResp = req.body.attResp
+
+    pool.query("SELECT webauthn_login_challenge, webauthn_private_key FROM users WHERE username = $1::text", [username], async (queryErr, queryRes) => {
+        if (queryErr) throw queryErr
+
+        if (queryRes.rows.length == 0)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
+        if (!queryRes.rows[0].webauthn_private_key)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
+        const expectedChallenge = queryRes.rows[0].webauthn_login_challenge
         const webauthn_private_key = queryRes.rows[0].webauthn_private_key
 
-        if (!webauthn_private_key)
-        {
-            apiSend(res, StatusCodes.UNAUTHORIZED)
-            return
-        }
+        const verification = await verifyAssertionResponse({
+                credential: attResp,
+                expectedChallenge,
+                expectedOrigin: WEBAPP_URL,
+                expectedRPID: WEBAPP_ORIGIN,
+                authenticator: webauthn_private_key
+            })
 
-        if (webauthn_private_key.credID !== keyId)
-        {
-            apiSend(res, StatusCodes.UNAUTHORIZED)
-            return
-        }
+        const { verified, _ } = verification;
+        webauthn_private_key.counter += 1
 
-        const loggedIn = verifyAuthenticatorAssertion(req.body, webauthn_private_key);
+        pool.query("UPDATE users SET webauthn_private_key = $1 WHERE username = $2::text", [webauthn_private_key, username], (updateErr, updateRes) => {
+            if (updateErr) throw updateErr;
+        })
 
-        if (loggedIn) {
-            createSessionCookie(req, res)
-            res.send({ loggedIn });
-        }
+        createSessionCookie(req, res)
+        res.send( { verified });
     })
-});
+})

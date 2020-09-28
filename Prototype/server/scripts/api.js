@@ -14,7 +14,7 @@ exports.apiSend = function(res, status_code, status_message) {
     }));
 }
 
-exports.createSessionCookie = async function(req, res) {
+exports.createSessionCookie = function(req, res) {
     res.cookie('user_sid', uuidv4(), setCookieOptions)
 }
 

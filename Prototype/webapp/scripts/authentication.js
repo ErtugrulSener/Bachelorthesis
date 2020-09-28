@@ -1,18 +1,14 @@
 window.clsec = (function (clsec) {
     let cached_pubkey = false;
 
-    const MIN_USERNAME_LENGTH = 8;
-    const MIN_PASSWORD_LENGTH = 8;
+    clsec.MIN_USERNAME_LENGTH = 8;
+    clsec.MIN_PASSWORD_LENGTH = 8;
 
     clsec.SERVER_URL = "https://localhost:3000/"
     
-    clsec.createHash = function(text)
+    clsec.verifiedSuccessfully = function ()
     {
-        let sha512 = new jsSHA('SHA-512', 'TEXT');
-        sha512.update(password);
-        const sha512_password = sha512.getHash("HEX");
-    
-        return sha512_password;
+        window.location.replace("/secret_panel.html");
     }
     
     clsec.getPublicKey = function()
@@ -21,7 +17,7 @@ window.clsec = (function (clsec) {
             return cached_pubkey;
     
         let publicKey = ""
-        let xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.open("GET", clsec.SERVER_URL + "get_public_key", false);
         xhttp.onreadystatechange = function ()
         {
@@ -40,7 +36,7 @@ window.clsec = (function (clsec) {
     
     clsec.encryptWithPublicKey = function(text)
     {
-        let encrypter = new JSEncrypt();
+        const encrypter = new JSEncrypt();
         const pubkey = clsec.getPublicKey();
         encrypter.setPublicKey(pubkey);
         const encrypted = encrypter.encrypt(text);
@@ -50,23 +46,22 @@ window.clsec = (function (clsec) {
     
     loginWithUserpass = function()
     {
-        let userFieldValue = document.getElementById("username").value
-        let passFieldValue = document.getElementById("password").value
+        const userFieldValue = document.getElementById("username").value
+        const passFieldValue = document.getElementById("password").value
     
-        if (userFieldValue.length < MIN_USERNAME_LENGTH || passFieldValue.length < MIN_PASSWORD_LENGTH)
+        if (userFieldValue.length < clsec.MIN_USERNAME_LENGTH || passFieldValue.length < clsec.MIN_PASSWORD_LENGTH)
             return;
     
-        let username = clsec.encryptWithPublicKey(userFieldValue)
-        let password = clsec.encryptWithPublicKey(passFieldValue)
-        let xhttp = new XMLHttpRequest();
+        const username = clsec.encryptWithPublicKey(userFieldValue)
+        const password = clsec.encryptWithPublicKey(passFieldValue)
+        const xhttp = new XMLHttpRequest();
     
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4)
             {
                 if (this.status == 200)
                 {
-
-                    window.location.replace("/secret_panel.html");
+                    clsec.verifiedSuccessfully()
                 }
                 else
                 {
@@ -83,14 +78,14 @@ window.clsec = (function (clsec) {
 
     loginWithTotp = function()
     {
-        let totp_token = clsec.getTotpToken()
-        let userFieldValue = document.getElementById("totp_username").value
+        const totp_token = clsec.getTotpToken()
+        const userFieldValue = document.getElementById("totp_username").value
         
-        if (userFieldValue.length < MIN_USERNAME_LENGTH)
+        if (userFieldValue.length < clsec.MIN_USERNAME_LENGTH)
             return;
     
-        let username = userFieldValue
-        let xhttp = new XMLHttpRequest();
+        const username = userFieldValue
+        const xhttp = new XMLHttpRequest();
 
         if (document.getElementById("totp_secret").style.display === "none")
         {
@@ -99,7 +94,7 @@ window.clsec = (function (clsec) {
                 {
                     if (this.status == 200)
                     {
-                        window.location.replace("/secret_panel.html");
+                        clsec.verifiedSuccessfully()
                     }
                     else
                     {
@@ -129,9 +124,8 @@ window.clsec = (function (clsec) {
                         }
                         else
                         {
-                            let flexbox_totp = document.getElementById("flexbox_totp")
-                            let totp_qr_image = document.getElementById("totp_qr_image")
-                            let totp_secret = document.getElementById("totp_secret")
+                            const totp_qr_image = document.getElementById("totp_qr_image")
+                            const totp_secret = document.getElementById("totp_secret")
             
                             totp_qr_image.src = res.msg.imageUrl;
                             clsec.showObj("totp_qr_image")

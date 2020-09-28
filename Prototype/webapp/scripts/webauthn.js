@@ -1,101 +1,66 @@
-import { 
-    solveRegistrationChallenge,
-    solveLoginChallenge
-} from './utils/webauthn/client/index.js';
+const { startAttestation, startAssertion } = SimpleWebAuthnBrowser;
 
 window.clsec = (function (webauthn) {
-    const MIN_USERNAME_LENGTH = 8
-
     webauthn.loginWithWebAuthentication = async function()
     {
         const username = document.getElementById("webauthn_username").value
-
-        if (username.length < MIN_USERNAME_LENGTH)
-            return;
-
-        const challenge = await fetch(clsec.SERVER_URL + 'webauthn/request-login', {
-            method: 'POST',
-            headers: {
-                'content-type': 'Application/Json'
-            },
-            body: JSON.stringify({ "username": username })
-        })
-        .then(response => response.json())
-        .catch(error => {
-            return Promise.reject(error.message)
-        });
-
-        const credentials = await solveLoginChallenge(challenge)
-        .catch(error => {
-            return Promise.reject(error.message)
-        });
-
-        const { loggedIn } = await fetch(clsec.SERVER_URL + 'webauthn/login', 
-            {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'content-type': 'Application/Json'
-                },
-                body: JSON.stringify(credentials)
-            }
-        ).then(response => response.json())
-        .catch(error => {
-            return Promise.reject(error.message)
-        });
     
-        if (!loggedIn)
+        if (username.length < clsec.MIN_USERNAME_LENGTH)
             return;
 
-        window.location.replace("/secret_panel.html");
+        const resp = await fetch(clsec.SERVER_URL + 'webauthn/generate-assertion-options?username='+username)
+        const asseResp = await startAssertion(await resp.json())
+        
+        const verificationResp = await fetch(clsec.SERVER_URL + 'webauthn/verify-assertion', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({"username": username, "attResp": asseResp}),
+        });
+        
+        const verificationJSON = await verificationResp.json();
+        
+        if (verificationJSON && verificationJSON.verified)
+        {
+            clsec.verifiedSuccessfully()
+        }
+        else
+        {
+            console.log('Error', verificationJSON)
+        }
     };
 
     $(function() {
-        $('#webauthn_register_button').click(function() {
-            (async () =>
-            {
-                const username = document.getElementById("webauthn_username").value
-
-                if (username.length < MIN_USERNAME_LENGTH)
-                    return;
-        
-                const challenge = await fetch(clsec.SERVER_URL + 'webauthn/request-register', {
-                    method: 'POST',
-                    headers: {
-                        'content-type': 'Application/Json'
-                    },
-                    body: JSON.stringify({ "username": username })
-                })
-                .then(response => response.json())
-                .catch(error => {
-                    return Promise.reject(error.message)
-                });
+        $('#webauthn_register_button').click(async () => {
+            const username = document.getElementById("webauthn_username").value
     
-                const credentials = await solveRegistrationChallenge(challenge)
-                .catch(error => {
-                    return Promise.reject(error.message)
-                });
+            if (username.length < clsec.MIN_USERNAME_LENGTH)
+                return;
+
+            const resp = await fetch(clsec.SERVER_URL + 'webauthn/generate-attestation-options?username='+username)
+            const attResp = await startAttestation(await resp.json())
+
+            const verificationResp = await fetch(clsec.SERVER_URL + 'webauthn/verify-attestation', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({"username": username, "attResp": attResp}),
+            });
         
-                const { loggedIn } = await fetch(clsec.SERVER_URL + 'webauthn/register',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'content-type': 'Application/Json'
-                        },
-                        body: JSON.stringify(credentials)
-                    }
-                ).then(response => response.json())
-                .catch(error => {
-                    return Promise.reject(error.message)
-                });
+            const verificationJSON = await verificationResp.json();
         
-                if (!loggedIn) {
-                    console.log("Registration failed")
-                    return;
-                }
-        
-                console.log("Registration successful")
-            })()
+            if (verificationJSON && verificationJSON.verified)
+            {
+                console.log('Success!');
+            }
+            else
+            {
+                console.log('Error', verificationJSON)
+            }
         })
     });
 
