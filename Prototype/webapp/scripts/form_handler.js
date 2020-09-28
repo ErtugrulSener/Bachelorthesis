@@ -54,6 +54,31 @@ window.clsec = (function (clsec) {
         {
             for (const elementName of elementsToShow)
             {
+                switch(method)
+                {
+                    case METHODS.WEBAUTHN:
+                    {
+                        if (!window.PublicKeyCredential) {
+                            console.log('WebAuthn not supported on this browser.');
+                            clsec.hideObj(elementName)
+                            continue
+                        }
+
+                        let UVPAA = async() => {
+                            let result = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                            return result;
+                        }
+
+                        if (!UVPAA)
+                        {
+                            console.log("WebAuthn couldn't find a valid authenticator.");
+                            clsec.hideObj(elementName)
+                            continue
+                        }
+                    }
+                    break;
+                }
+
                 if (formFields[method].includes(elementName))
                     clsec.showObj(elementName)
                 else

@@ -214,19 +214,13 @@ app.post('/webauthn/request-register', (req, res) => {
             return
         }
 
-        if (queryRes.rows[0].webauthn_private_key)
-        {
-            apiSend(res, StatusCodes.UNAUTHORIZED)
-            return
-        }
-
         var hostname = url.parse(WEBAPP_URL, true).hostname
 
         const challengeResponse = generateRegistrationChallenge({
             relyingParty: { name: PROJECT_NAME, id: hostname },
             user: { id: username, name: email, displayName: username }
         });
-    
+
         pool.query("UPDATE users SET webauthn_register_challenge = $1::text WHERE username = $2::text", [challengeResponse.challenge, username], (updateErr, updateRes) => {
             if (updateErr) throw updateErr;
         })
@@ -288,6 +282,13 @@ app.post('/webauthn/request-login', (req, res) => {
         }
 
         const webauthn_private_key = queryRes.rows[0].webauthn_private_key
+
+        if (!webauthn_private_key)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
+
         const assertionChallenge = generateLoginChallenge(webauthn_private_key);
 
         pool.query("UPDATE users SET webauthn_login_challenge = $1::text WHERE username = $2::text", [assertionChallenge.challenge, username], (updateErr, updateRes) => {
@@ -317,6 +318,12 @@ app.post('/webauthn/login', (req, res) => {
         }
 
         const webauthn_private_key = queryRes.rows[0].webauthn_private_key
+
+        if (!webauthn_private_key)
+        {
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
 
         if (webauthn_private_key.credID !== keyId)
         {
