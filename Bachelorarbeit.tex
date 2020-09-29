@@ -70,7 +70,7 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 \firstReviewerInstitutionPlace{04277 Leipzig}
 %
 \secondReviewerName{Juri Lobov}
-\secondReviewerInstitution{T-Systems International GmBH}
+\secondReviewerInstitution{T-Systems International GmbH}
 \secondReviewerInstitutionStreet{Holzhauser Straße 1-4}
 \secondReviewerInstitutionPlace{13509 Berlin}
 
@@ -107,22 +107,8 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 \input{Content/vorwort} % include the file Content/vorwort.tex
 \cleardoublepage
 
-\makedeclarationofauthorship % print the declaration of authorship
-
 \tableofcontents %print the table of contents
 \cleardoublepage
-
-\printnoidxglossary[type=\acronymtype] % print the list of abbreviations
-\cleardoublepage
-
-\listoffigures % print the list of figures
-\cleardoublepage
-
-\listoftables % print the list of tables
-\cleardoublepage
-
-\lstlistoflistings % print the list of source codes
-\cleardoublepage	
 
 % Include the other chapters
 \include{Content/einleitung}
@@ -137,9 +123,13 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 \printbibliography % Print the bibliography
 \cleardoublepage
 
+\makedeclarationofauthorship % print the declaration of authorship
+\printnoidxglossary[type=\acronymtype] % print the list of abbreviations
+\listoffigures % print the list of figures
+\listoftables % print the list of tables
+\lstlistoflistings % print the list of source codes
+
 \appendix % Begin the appendix. Chapters begin with letters
 % \pagenumbering{Roman} %page numbers as capital roman numbers
-\setcounter{page}{1} % restart page numbers from one
-\include{Content/anhang} % include the appendix
 \end{document}
 % ----------------------------------------------------
