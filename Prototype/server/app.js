@@ -25,6 +25,7 @@ const {
 const connection = require('./scripts/connection.js')
 const { apiSend, createSessionCookie, clearSessionCookie } = require('./scripts/api.js')
 const { hashString } = require('./scripts/hashing.js')
+const { query } = require('express')
 
 const WEBAPP_ORIGIN = "localhost"
 const WEBAPP_URL = "https://" + WEBAPP_ORIGIN + ":5500"
@@ -199,10 +200,22 @@ app.post('/totp/check_token', (req, res) => {
     })
 })
 
+function getUserAuthenticators(queryRes)
+{
+    const webauthn_authenticator_data = queryRes.rows[0].webauthn_authenticator_data
+    return webauthn_authenticator_data || []
+}
+
+function getUserAuthenticator(queryRes, id)
+{
+    const webauthn_authenticator_data = getUserAuthenticators(queryRes)
+    return webauthn_authenticator_data.filter(authenticator => authenticator.credentialID === id)[0]
+}
+
 app.get('/webauthn/generate-attestation-options', (req, res) => {
     const username = req.query.username
 
-    pool.query("SELECT id, webauthn_private_key FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
+    pool.query("SELECT id FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
@@ -211,11 +224,7 @@ app.get('/webauthn/generate-attestation-options', (req, res) => {
             return
         }
 
-        if (queryRes.rows[0].webauthn_private_key)
-        {
-            apiSend(res, StatusCodes.UNAUTHORIZED)
-            return
-        }
+        const userAuthenticators = getUserAuthenticators(queryRes)
 
         const options = generateAttestationOptions({
             rpName: PROJECT_NAME,
@@ -228,6 +237,7 @@ app.get('/webauthn/generate-attestation-options', (req, res) => {
                 requireResidentKey: false,
                 userVerification: "discouraged",
             },
+            excludedCredentialIDs: userAuthenticators.map(dev => dev.credentialID),
             extensions: {
                 txAuthSimple: ""
             }
@@ -245,7 +255,7 @@ app.post('/webauthn/verify-attestation', (req, res) => {
     const username = req.body.username
     const attResp = req.body.attResp
 
-    pool.query("SELECT webauthn_register_challenge, webauthn_private_key FROM users WHERE username = $1::text", [username], async (queryErr, queryRes) => {
+    pool.query("SELECT webauthn_register_challenge FROM users WHERE username = $1::text", [username], async (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
@@ -254,20 +264,22 @@ app.post('/webauthn/verify-attestation', (req, res) => {
             return
         }
 
-        if (queryRes.rows[0].webauthn_private_key)
-        {
-            apiSend(res, StatusCodes.UNAUTHORIZED)
-            return
-        }
-
         const expectedChallenge = queryRes.rows[0].webauthn_register_challenge
 
-        const verification = await verifyAttestationResponse({
+        let verification;
+        try
+        {
+            verification = await verifyAttestationResponse({
                 credential: attResp,
                 expectedChallenge,
                 expectedOrigin: WEBAPP_URL,
                 expectedRPID: WEBAPP_ORIGIN,
             })
+        }
+        catch(error)
+        {
+            return res.status(StatusCodes.UNAUTHORIZED).send({ error: error.message });
+        }
 
         const { verified, authenticatorInfo } = verification;
         const { base64PublicKey, base64CredentialID, counter } = authenticatorInfo;
@@ -278,7 +290,14 @@ app.post('/webauthn/verify-attestation', (req, res) => {
             counter,
         };
 
-        pool.query("UPDATE users SET webauthn_private_key = $1 WHERE username = $2::text", [Authenticator, username], (updateErr, updateRes) => {
+        const query = `UPDATE users SET webauthn_authenticator_data = (
+            CASE
+                WHEN webauthn_authenticator_data IS NULL THEN '[]'::JSONB
+                ELSE webauthn_authenticator_data
+            END
+        ) || $1 WHERE username = $2::text`;
+
+        pool.query(query, [Authenticator, username], (updateErr, updateRes) => {
             if (updateErr) throw updateErr;
         })
 
@@ -289,7 +308,7 @@ app.post('/webauthn/verify-attestation', (req, res) => {
 app.get('/webauthn/generate-assertion-options', (req, res) => {
     const username = req.query.username
 
-    pool.query("SELECT id, webauthn_private_key FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
+    pool.query("SELECT id, webauthn_authenticator_data FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
@@ -298,19 +317,13 @@ app.get('/webauthn/generate-assertion-options', (req, res) => {
             return
         }
 
-        if (!queryRes.rows[0].webauthn_private_key)
-        {
-            apiSend(res, StatusCodes.UNAUTHORIZED)
-            return
-        }
-
-        const credentialID = queryRes.rows[0].webauthn_private_key.credentialID
+        const userAuthenticators = getUserAuthenticators(queryRes)
 
         const options = generateAssertionOptions({
             extensions: {
                 txAuthSimple: "",
             },
-            allowedCredentialIDs: [credentialID],
+            allowedCredentialIDs: userAuthenticators.map(data => data.credentialID),
           });
     
         pool.query("UPDATE users SET webauthn_login_challenge = $1::text WHERE username = $2::text", [options.challenge, username], (updateErr, updateRes) => {
@@ -325,7 +338,7 @@ app.post('/webauthn/verify-assertion', (req, res) => {
     const username = req.body.username
     const attResp = req.body.attResp
 
-    pool.query("SELECT webauthn_login_challenge, webauthn_private_key FROM users WHERE username = $1::text", [username], async (queryErr, queryRes) => {
+    pool.query("SELECT webauthn_login_challenge, webauthn_authenticator_data FROM users WHERE username = $1::text", [username], async (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
         if (queryRes.rows.length == 0)
@@ -334,29 +347,50 @@ app.post('/webauthn/verify-assertion', (req, res) => {
             return
         }
 
-        if (!queryRes.rows[0].webauthn_private_key)
+        const userAuthenticator = getUserAuthenticator(queryRes, attResp.id)
+
+        if (!userAuthenticator)
         {
             apiSend(res, StatusCodes.UNAUTHORIZED)
             return
         }
 
         const expectedChallenge = queryRes.rows[0].webauthn_login_challenge
-        const webauthn_private_key = queryRes.rows[0].webauthn_private_key
 
-        const verification = await verifyAssertionResponse({
+        let verification;
+        try
+        {
+            verification = await verifyAssertionResponse({
                 credential: attResp,
                 expectedChallenge,
                 expectedOrigin: WEBAPP_URL,
                 expectedRPID: WEBAPP_ORIGIN,
-                authenticator: webauthn_private_key
+                authenticator: userAuthenticator
             })
+        }
+        catch (error)
+        {
+            console.log(error)
+            apiSend(res, StatusCodes.UNAUTHORIZED)
+            return
+        }
 
         const { verified, _ } = verification;
-        webauthn_private_key.counter += 1
+    
+        /* TODO: Figure out why the counter for security keys is going wrong, eg: beginning at >= 6000?
+        const userAuthenticators = getUserAuthenticators(queryRes)
+        for (let i = 0; i < userAuthenticators.length; ++i)
+        {
+            if (userAuthenticators[i].credentialID !== userAuthenticator.credentialID)
+                continue
 
-        pool.query("UPDATE users SET webauthn_private_key = $1 WHERE username = $2::text", [webauthn_private_key, username], (updateErr, updateRes) => {
+            userAuthenticators[i].counter += 1
+        }
+
+        pool.query("UPDATE users SET webauthn_authenticator_data = $1 WHERE username = $2::text", [JSON.stringify(userAuthenticators), username], (updateErr, updateRes) => {
             if (updateErr) throw updateErr;
         })
+        */
 
         createSessionCookie(req, res)
         res.send( { verified });
