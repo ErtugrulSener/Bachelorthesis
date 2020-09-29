@@ -12,6 +12,7 @@
 [12] https://link.springer.com/article/10.1007%2Fs11623-008-0127-3
 [13] https://tools.ietf.org/html/rfc6238
 [14] https://www.w3.org/TR/webauthn/#webauthn-relying-party
+[15] https://fidoalliance.org/how-fido-works/
 
 Bilder:
 [P1] https://fidoalliance.org/wp-content/uploads/FIDO2-Graphic-v2.png
