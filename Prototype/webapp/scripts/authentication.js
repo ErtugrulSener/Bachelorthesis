@@ -1,8 +1,10 @@
+const { startAttestation, startAssertion } = SimpleWebAuthnBrowser;
+
 window.clsec = (function (clsec) {
     let cached_pubkey = false;
 
-    clsec.MIN_USERNAME_LENGTH = 8;
-    clsec.MIN_PASSWORD_LENGTH = 8;
+    const MIN_USERNAME_LENGTH = 8;
+    const MIN_PASSWORD_LENGTH = 8;
 
     clsec.SERVER_URL = "https://localhost:3000/"
     
@@ -49,7 +51,7 @@ window.clsec = (function (clsec) {
         const userFieldValue = document.getElementById("username").value
         const passFieldValue = document.getElementById("password").value
     
-        if (userFieldValue.length < clsec.MIN_USERNAME_LENGTH || passFieldValue.length < clsec.MIN_PASSWORD_LENGTH)
+        if (userFieldValue.length < MIN_USERNAME_LENGTH || passFieldValue.length < MIN_PASSWORD_LENGTH)
             return;
     
         const username = clsec.encryptWithPublicKey(userFieldValue)
@@ -81,7 +83,7 @@ window.clsec = (function (clsec) {
         const totp_token = clsec.getTotpToken()
         const userFieldValue = document.getElementById("totp_username").value
         
-        if (userFieldValue.length < clsec.MIN_USERNAME_LENGTH)
+        if (userFieldValue.length < MIN_USERNAME_LENGTH)
             return;
     
         const username = userFieldValue
@@ -154,12 +156,43 @@ window.clsec = (function (clsec) {
         }
     }
 
+    loginWithWebAuthentication = async function()
+    {
+        const username = document.getElementById("webauthn_username").value
+    
+        if (username.length < MIN_USERNAME_LENGTH)
+            return;
+
+        const resp = await fetch(clsec.SERVER_URL + 'webauthn/generate-assertion-options?username='+username)
+        const asseResp = await startAssertion(await resp.json())
+        
+        const verificationResp = await fetch(clsec.SERVER_URL + 'webauthn/verify-assertion', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({"username": username, "attResp": asseResp}),
+        });
+        
+        const verificationJSON = await verificationResp.json();
+        
+        if (verificationJSON && verificationJSON.verified)
+        {
+            clsec.verifiedSuccessfully()
+        }
+        else
+        {
+            console.log('Error', verificationJSON)
+        }
+    };
+
     clsec.login = function()
     {
         const AUTH_FUNCTIONS = {
             0: loginWithUserpass,
             1: loginWithTotp,
-            2: clsec.loginWithWebAuthentication,
+            2: loginWithWebAuthentication,
         }
 
         const method = clsec.getMethod()
@@ -168,6 +201,36 @@ window.clsec = (function (clsec) {
         if (func)
             func()
     }
+
+    $('#webauthn_register_button').click(async () => {
+        const username = document.getElementById("webauthn_username").value
+
+        if (username.length < MIN_USERNAME_LENGTH)
+            return;
+
+        const resp = await fetch(clsec.SERVER_URL + 'webauthn/generate-attestation-options?username='+username)
+        const attResp = await startAttestation(await resp.json())
+
+        const verificationResp = await fetch(clsec.SERVER_URL + 'webauthn/verify-attestation', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({"username": username, "attResp": attResp}),
+        });
+    
+        const verificationJSON = await verificationResp.json();
+    
+        if (verificationJSON && verificationJSON.verified)
+        {
+            console.log('Success!');
+        }
+        else
+        {
+            console.log('Error', verificationJSON)
+        }
+    })
 
     return clsec;
 }(window.clsec || {}));
