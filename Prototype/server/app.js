@@ -160,7 +160,7 @@ app.post('/totp/check_token', (req, res) => {
     const username = req.body.username
     const totp_token = req.body.totp_token
 
-    if (!username || !totp_token)
+    if (!username || !totp_token || totp_token.length != 6)
     {
         apiSend(res, StatusCodes.UNAUTHORIZED)
         return
@@ -187,7 +187,7 @@ app.post('/totp/check_token', (req, res) => {
 
         if (!isValid)
         {
-            apiSend(res, StatusCodes.UNAUTHORIZED, "Invalid TOTP Code")
+            apiSend(res, StatusCodes.UNAUTHORIZED)
             return;
         }
 
