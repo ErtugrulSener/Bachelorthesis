@@ -31,6 +31,9 @@ const WEBAPP_ORIGIN = "localhost"
 const WEBAPP_URL = "https://" + WEBAPP_ORIGIN + ":5500"
 const SERVER_PORT = 3000
 const PROJECT_NAME = "clsec"
+const MIN_USERNAME_LENGTH = 8
+const MIN_PASSWORD_LENGTH = 8
+const TOTP_TOKEN_LENGTH = 6
 
 const privateKey  = fs.readFileSync('../keys/ssl/server.key', 'utf8');
 const certificate = fs.readFileSync('../keys/ssl/server.cert', 'utf8');
@@ -59,6 +62,51 @@ app.use((req, res, next) => {
 
 const pool = new Pool(connection.getConnectionDetails())
 
+function getUserAuthenticators(queryRes)
+{
+    const webauthn_authenticator_data = queryRes.rows[0].webauthn_authenticator_data
+    return webauthn_authenticator_data || []
+}
+
+function getUserAuthenticator(queryRes, id)
+{
+    const webauthn_authenticator_data = getUserAuthenticators(queryRes)
+    return webauthn_authenticator_data.filter(authenticator => authenticator.credentialID === id)[0]
+}
+
+function isValidUsername(username)
+{
+    if (!username || typeof(username) !== "string")
+        return false;
+    
+    if (username.length < MIN_USERNAME_LENGTH)
+        return false;
+
+    return true;
+}
+
+function isValidPassword(password)
+{
+    if (!password || typeof(password) !== "string")
+        return false;
+    
+    if (password.length < MIN_PASSWORD_LENGTH)
+        return false;
+
+    return true;
+}
+
+function isValidTotpToken(totp_token)
+{
+    if (!totp_token || typeof(totp_token) !== "string")
+        return false;
+    
+    if (totp_token.length != TOTP_TOKEN_LENGTH)
+        return false;
+
+    return true;
+}
+
 app.post('/password/login', function (req, res) {
     const encrypted_username = req.body.username
     const encrypted_password = req.body.password
@@ -69,6 +117,12 @@ app.post('/password/login', function (req, res) {
     decrypter.setPrivateKey(privkey)
     var username = decrypter.decrypt(encrypted_username)
     var password = decrypter.decrypt(encrypted_password)
+
+    if (!isValidUsername(username) || !isValidPassword(password))
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED, "Username oder Passwort falsch")
+        return
+    }
 
     pool.query("SELECT username, password, salt FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
@@ -128,7 +182,7 @@ function createTotpAuthenticationUrl(username,  totp_secret, req, res)
 app.post('/totp/check_username', (req, res) => {
     const username = req.body.username
 
-    if (!username)
+    if (!isValidUsername(username))
     {
         apiSend(res, StatusCodes.UNAUTHORIZED, "Username oder Passwort falsch")
         return
@@ -160,7 +214,7 @@ app.post('/totp/check_token', (req, res) => {
     const username = req.body.username
     const totp_token = req.body.totp_token
 
-    if (!username || !totp_token || totp_token.length != 6)
+    if (!isValidUsername(username) || !isValidTotpToken(totp_token))
     {
         apiSend(res, StatusCodes.UNAUTHORIZED)
         return
@@ -200,20 +254,14 @@ app.post('/totp/check_token', (req, res) => {
     })
 })
 
-function getUserAuthenticators(queryRes)
-{
-    const webauthn_authenticator_data = queryRes.rows[0].webauthn_authenticator_data
-    return webauthn_authenticator_data || []
-}
-
-function getUserAuthenticator(queryRes, id)
-{
-    const webauthn_authenticator_data = getUserAuthenticators(queryRes)
-    return webauthn_authenticator_data.filter(authenticator => authenticator.credentialID === id)[0]
-}
-
 app.get('/webauthn/generate-attestation-options', (req, res) => {
     const username = req.query.username
+
+    if (!isValidUsername(username))
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED)
+        return
+    }
 
     pool.query("SELECT id FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
@@ -254,6 +302,12 @@ app.get('/webauthn/generate-attestation-options', (req, res) => {
 app.post('/webauthn/verify-attestation', (req, res) => {
     const username = req.body.username
     const attResp = req.body.attResp
+
+    if (!isValidUsername(username) || !attResp)
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED)
+        return
+    }
 
     pool.query("SELECT webauthn_register_challenge FROM users WHERE username = $1::text", [username], async (queryErr, queryRes) => {
         if (queryErr) throw queryErr
@@ -308,6 +362,12 @@ app.post('/webauthn/verify-attestation', (req, res) => {
 app.get('/webauthn/generate-assertion-options', (req, res) => {
     const username = req.query.username
 
+    if (!isValidUsername(username))
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED)
+        return
+    }
+
     pool.query("SELECT id, webauthn_authenticator_data FROM users WHERE username = $1::text", [username], (queryErr, queryRes) => {
         if (queryErr) throw queryErr
 
@@ -337,6 +397,12 @@ app.get('/webauthn/generate-assertion-options', (req, res) => {
 app.post('/webauthn/verify-assertion', (req, res) => {
     const username = req.body.username
     const attResp = req.body.attResp
+
+    if (!isValidUsername(username) || !attResp)
+    {
+        apiSend(res, StatusCodes.UNAUTHORIZED)
+        return
+    }
 
     pool.query("SELECT webauthn_login_challenge, webauthn_authenticator_data FROM users WHERE username = $1::text", [username], async (queryErr, queryRes) => {
         if (queryErr) throw queryErr

@@ -1,26 +1,24 @@
-const { startAttestation, startAssertion } = SimpleWebAuthnBrowser;
-
 window.clsec = (function (clsec) {
     let cached_pubkey = false;
 
     const MIN_USERNAME_LENGTH = 8;
     const MIN_PASSWORD_LENGTH = 8;
 
-    clsec.SERVER_URL = "https://localhost:3000/"
+    const SERVER_URL = "https://localhost:3000/"
     
     clsec.verifiedSuccessfully = function ()
     {
         window.location.replace("/secret_panel.html");
     }
     
-    clsec.getPublicKey = function()
+    getPublicKey = function()
     {
         if (cached_pubkey)
             return cached_pubkey;
     
         let publicKey = ""
         const xhttp = new XMLHttpRequest();
-        xhttp.open("GET", clsec.SERVER_URL + "get_public_key", false);
+        xhttp.open("GET", SERVER_URL + "get_public_key", false);
         xhttp.onreadystatechange = function ()
         {
             if (xhttp.readyState === 4 && xhttp.status == 200)
@@ -35,11 +33,11 @@ window.clsec = (function (clsec) {
         cached_pubkey = publicKey
         return publicKey;
     }
-    
-    clsec.encryptWithPublicKey = function(text)
+
+    encryptWithPublicKey = function(text)
     {
         const encrypter = new JSEncrypt();
-        const pubkey = clsec.getPublicKey();
+        const pubkey = getPublicKey();
         encrypter.setPublicKey(pubkey);
         const encrypted = encrypter.encrypt(text);
     
@@ -54,8 +52,8 @@ window.clsec = (function (clsec) {
         if (userFieldValue.length < MIN_USERNAME_LENGTH || passFieldValue.length < MIN_PASSWORD_LENGTH)
             return;
     
-        const username = clsec.encryptWithPublicKey(userFieldValue)
-        const password = clsec.encryptWithPublicKey(passFieldValue)
+        const username = encryptWithPublicKey(userFieldValue)
+        const password = encryptWithPublicKey(passFieldValue)
         const xhttp = new XMLHttpRequest();
     
         xhttp.onreadystatechange = function() {
@@ -72,7 +70,7 @@ window.clsec = (function (clsec) {
             }
         };
     
-        xhttp.open("POST", clsec.SERVER_URL + "password/login");
+        xhttp.open("POST", SERVER_URL + "password/login");
         xhttp.withCredentials = true;
         xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhttp.send(JSON.stringify({"username": username, "password": password}));
@@ -105,7 +103,7 @@ window.clsec = (function (clsec) {
                 }
             };
       
-            xhttp.open("POST", clsec.SERVER_URL + "totp/check_token");
+            xhttp.open("POST", SERVER_URL + "totp/check_token");
             xhttp.withCredentials = true;
             xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xhttp.send(JSON.stringify({"username": username, "totp_token": totp_token}));
@@ -149,7 +147,7 @@ window.clsec = (function (clsec) {
                 }
             };
       
-            xhttp.open("POST", clsec.SERVER_URL + "totp/check_username");
+            xhttp.open("POST", SERVER_URL + "totp/check_username");
             xhttp.withCredentials = true;
             xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xhttp.send(JSON.stringify({"username": username}));
@@ -163,10 +161,10 @@ window.clsec = (function (clsec) {
         if (username.length < MIN_USERNAME_LENGTH)
             return;
 
-        const resp = await fetch(clsec.SERVER_URL + 'webauthn/generate-assertion-options?username='+username)
-        const asseResp = await startAssertion(await resp.json())
+        const resp = await fetch(SERVER_URL + 'webauthn/generate-assertion-options?username='+username)
+        const asseResp = await SimpleWebAuthnBrowser.startAssertion(await resp.json())
         
-        const verificationResp = await fetch(clsec.SERVER_URL + 'webauthn/verify-assertion', {
+        const verificationResp = await fetch(SERVER_URL + 'webauthn/verify-assertion', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -187,14 +185,14 @@ window.clsec = (function (clsec) {
         }
     };
 
+    const AUTH_FUNCTIONS = {
+        0: loginWithUserpass,
+        1: loginWithTotp,
+        2: loginWithWebAuthentication,
+    }
+
     clsec.login = function()
     {
-        const AUTH_FUNCTIONS = {
-            0: loginWithUserpass,
-            1: loginWithTotp,
-            2: loginWithWebAuthentication,
-        }
-
         const method = clsec.getMethod()
         const func = AUTH_FUNCTIONS[method]
 
@@ -202,34 +200,36 @@ window.clsec = (function (clsec) {
             func()
     }
 
-    $('#webauthn_register_button').click(async () => {
-        const username = document.getElementById("webauthn_username").value
+    $(function() {
+        $('#webauthn_register_button').click(async () => {
+            const username = document.getElementById("webauthn_username").value
 
-        if (username.length < MIN_USERNAME_LENGTH)
-            return;
+            if (username.length < MIN_USERNAME_LENGTH)
+                return;
 
-        const resp = await fetch(clsec.SERVER_URL + 'webauthn/generate-attestation-options?username='+username)
-        const attResp = await startAttestation(await resp.json())
+            const resp = await fetch(SERVER_URL + 'webauthn/generate-attestation-options?username='+username)
+            const attResp = await SimpleWebAuthnBrowser.startAttestation(await resp.json())
 
-        const verificationResp = await fetch(clsec.SERVER_URL + 'webauthn/verify-attestation', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({"username": username, "attResp": attResp}),
-        });
-    
-        const verificationJSON = await verificationResp.json();
-    
-        if (verificationJSON && verificationJSON.verified)
-        {
-            console.log('Success!');
-        }
-        else
-        {
-            console.log('Error', verificationJSON)
-        }
+            const verificationResp = await fetch(SERVER_URL + 'webauthn/verify-attestation', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({"username": username, "attResp": attResp}),
+            });
+        
+            const verificationJSON = await verificationResp.json();
+        
+            if (verificationJSON && verificationJSON.verified)
+            {
+                console.log('Success!');
+            }
+            else
+            {
+                console.log('Error', verificationJSON)
+            }
+        })
     })
 
     return clsec;
