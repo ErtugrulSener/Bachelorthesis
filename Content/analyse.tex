@@ -1,5 +1,5 @@
 % !TeX root = ../Bachelorarbeit.tex
-\chapter{Prototypischer Lösungsansatz}
+% \chapter{Prototypischer Lösungsansatz}
 
 \section{Implementationsdetails}
 \begin{enumerate} 
@@ -25,16 +25,16 @@ Der NodeJS - Server besteht aus einer REST Api, die keine Zustände speichert. N
  \item \textbf{/logout} - POST - Löscht den Session-Cookie (und damit die Session des Nutzers) und leitet ihn auf die Loginseite \textbf{index.html} weiter.
 
  \item \textbf{/get\_public\_key} - GET - Liest den öffentlichen Schlüssel des Servers ein und gibt diesen in einer JSON - Struktur zurück. Ist wichtig für die Username \& Passwort - Authentifizierung.
- \newpage
 
  \item \textbf{/password/login} - POST - Nimmt einen mit dem öffentlichen Schlüssel des Servers verschlüsselten Usernamen und Passwort entgegen und entschlüsselt diese mit dem privaten Schlüssel. Im Anschluss darauf wird in der Datenbank über einen gepoolte Query (eine Anzahl an Verbindungsprozessen zur Datenbank) nach dem Nutzer gesucht. Wurde dieser gefunden, erstellt der Server einen SHA512 - Hash aus dem Passwort (aus dem Request) und dem Salt des Users (aus der Datenbank) indem die \textbf{hashString} - Methode aufgerufen wird. Diese arbeitet mit der crypto Library um den Hash zu generieren und bezieht den Pepper des Servers mit ein. Sofern die Hashes aus der Datenbank und der soeben Generierte übereinstimmen, erhält der Nutzer die Response 200 und den Text ``OK''. Gleichzeitig wird wie bei jeder anderen Authentifizierungsmethode die \textbf{createSessionCookie} - Methode aufgerufen um den Session-Cookie (eine zufällige UUID) im Header zurück an den Nutzer zu senden, sodass dieser ihn im Browser.
+ \newpage
  
  \item \textbf{/password/create\_password\_hash} - GET - Nimmt eine Zeichenkette des Nutzers entgegen und erstellt einen Password-Hash für den Nutzer, der manuell in die Datenbank persistiert werden kann. Ist als 'Quality of Service' Funktion zu verstehen, um es dem Administrator einfacher zu machen, Passwörter zu erstellen, die bei Vergleich einen gülltigen Hash ergeben.
  
  \item \textbf{/totp/check\_username} - POST - Diese Methode dient lediglich der Prüfung, ob der Nutzer die TOTP Authentifikation mittels zufälligem SECRET bereits gegenüber der Webseite validiert hat. Das Datenbankfeld 'totp\_activated' wird hier geprüft, ist der Wert 1 (stehen für das boolsche 'wahr') liefert der Server den Text ``Success'' zurück, das der Client deutet um nur das Feld für den sechsstelligen OTP Code anzuzeigen. Hat das Feld allerdings den Wert 0, wird entweder (sofern noch nicht vorhanden im Feld 'totp\_secret') ein neues Secret erstellt und in der Datenbank für diesen Nutzer persistiert. Gleichzeitig für eine URL beginnend mit otp:// erstellt, um diesen zusammen mit einem Base 64 enkodierten QR Code an den Client geschickt, der dies dem User präsentiert. Es wurde sich hier bewusst dazu entschieden, diese Schritte auf Serverseite vorzunehmen. Möglich wäre es auch auf Clientseite gewesen, wäre aber mit einem Mehraufwand verbunden, welches hier verhindert werden sollte.
- \newpage
  
  \item \textbf{/totp/check\_token} - POST - Nimmt den Usernamen des Nutzers und einen sechsstelligen TOTP Token entgegen. Sucht im Anschluss darauf in der Datenbank nach dem Nutzer und prüft über die Library 'otplib' ob der eingegebene TOTP - Token zum secret in der Datenbank valide ist. Dieser Schritt findet sowohl bei der Registration als auch beim Login statt. Wenn das Feld 'totp\_activated' also 0 ist, wird es bei der ersten Authentifikation auf 1 gesetzt und der Nutzer wird eingeloggt. (Session-Cookie wird gesetzt und nutzer weitergeleitet)
+ \newpage
 
  \item \textbf{/webauthn/generate-attestation-options} - POST
  Liefert dem Nutzer die verschiedenen Registrieroptionen für die Web Authentication mittels WebauthnAPI. Dabei wurden verschiedene Optionen gesetzt, die im folgenden erklärt werden und die der User im Body der Response als JSON - Objekt erhält.
