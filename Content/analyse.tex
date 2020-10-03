@@ -25,7 +25,7 @@ Der NodeJS - Server besteht aus einer REST Api, die keine Zustände speichert. N
 
  \item \textbf{/get\_public\_key} - GET - Liest den öffentlichen Schlüssel des Servers ein und gibt diesen in einer JSON - Struktur zurück. Ist wichtig für die Username \& Passwort - Authentifizierung.
 
- \item \textbf{/password/login} - POST - Nimmt einen mit dem öffentlichen Schlüssel des Servers verschlüsselten Usernamen und Passwort entgegen und entschlüsselt diese mit dem privaten Schlüssel. Im Anschluss darauf wird in der Datenbank über einen gepoolte Query (eine Anzahl an Verbindungsprozessen zur Datenbank) nach dem Nutzer gesucht. Wurde dieser gefunden, erstellt der Server einen SHA512 - Hash aus dem Passwort (aus dem Request) und dem Salt des Users (aus der Datenbank) indem die \textbf{hashString} - Methode aufgerufen wird. Diese arbeitet mit der crypto Library um den Hash zu generieren und bezieht den Pepper des Servers mit ein. Sofern die Hashes aus der Datenbank und der soeben Generierte übereinstimmen, erhält der Nutzer die Response 200 und den Text ``OK''. Gleichzeitig wird wie bei jeder anderen Authentifizierungsmethode die \textbf{createSessionCookie} - Methode aufgerufen um den Session-Cookie (eine zufällige UUID) im Header zurück an den Nutzer zu senden, sodass dieser ihn im Browser.
+ \item \textbf{/password/login} - POST - Nimmt einen mit dem öffentlichen Schlüssel des Servers verschlüsselten Usernamen und Passwort entgegen und entschlüsselt diese mit dem privaten Schlüssel. Im Anschluss darauf wird in der Datenbank über einen gepoolte Query nach dem Nutzer gesucht. Wurde dieser gefunden, erstellt der Server einen SHA512 - Hash aus dem Passwort (aus dem Request) und dem Salt des Users (aus der Datenbank) indem die \textbf{hashString} - Methode aufgerufen wird. Diese bezieht den Pepper des Servers mit ein. Sofern die Hashes aus der Datenbank und der soeben Generierte übereinstimmen, erhält der Nutzer die Response 200 und den Text ``OK''. Gleichzeitig wird wie bei jeder anderen Authentifizierungsmethode die \textbf{createSessionCookie} - Methode aufgerufen um den Session-Cookie (eine zufällige UUID) im Header zurück an den Nutzer zu senden, sodass dessen Browser ihn setzt..
  \newpage
  
  \item \textbf{/password/create\_password\_hash} - GET - Nimmt eine Zeichenkette des Nutzers entgegen und erstellt einen Password-Hash für den Nutzer, der manuell in die Datenbank persistiert werden kann. Ist als 'Quality of Service' Funktion zu verstehen, um es dem Administrator einfacher zu machen, Passwörter zu erstellen, die bei Vergleich einen gülltigen Hash ergeben.
@@ -68,8 +68,33 @@ Der NodeJS - Server besteht aus einer REST Api, die keine Zustände speichert. N
 
 \textbf{excludedCredentialIDs:} Dies ist eine Liste von credentialID's die in der Datenbank im Feld 'webauthn\_authenticator\_data' als JSON - Sturktur persistiert sind. Sie dient dazu, bereits registrierte Methoden nicht erneut anzuzeigen, funktioniert dennoch nicht zuverlässig.
 \end{itemize}
+\newpage
 
-\item \textbf{Datenbank} (Schadensauswirkungen können ein existenziell bedrohliches Ausmaß annehmen
+\item \textbf{Datenbank}
+
+Das gewählte Datenbankmanagementsystem ist PosgreSQL 12, dies hat einen speziellen Grund. Das Datenbankmanagementsysten besitzt fortgeschrittene Funktionalitäten um JSON Strukturen zu persistieren und zu bearbeiten. Gleichzeitig wäre es möglich Constraints zu erstellen, die bei anderen Managementsystemen wie MYSQL nur bei speziellen Tabellentypen wie InnoDB und das auch nicht vollständig verfügbar sind. Der Prototyp benötigt nur eine einzige Tabelle namens \textbf{users}. Er speichert typische Daten um den Nutzer zu authentifizieren. Jeder nutze besitzt eine eigene einzigartige ID, die eine Ganzzahl ist. Dann besitzt jeder User einen Nutzernamen im Feld 'username'. Die Felder 'password' und 'salt' besitzen logischerweise nur Nutzer, die die Passwort Authentifikation unterstützen. Die Felder 'totp\_secret' und 'totp\_activated' werden einerseits genutzt um das Geheimnis (welches der User beim TOTP Setup einscannt) zu erstellen und den Nutzer damit später zu authentifizieren und andererseits um dem Frontend zu signalisieren, ob der Nutzer das Setup vollzogen hat. Die Challenge-Felder für Webauthn 'webauthn\_register\_challenge' und 'webauthn\_login\_challenge' sind als eine Art Zwischenablage zu verstehen und hätten theoretisch auch im Cache des Backends persistiert werden können, da bei jeder neuen Registration und jedem neuen Login durch Webauthn eine neue Challenge vom Server erstellt und vom Nutzer nach dem Signieren zurückkommt. Interessant ist das Feld 'webauthn\_authenticator\_data', das in einer JSON-Liste alle registrierten Geräte für die Web Authentication sichert.
+
+ \begin{lstlisting}[language=json,firstnumber=1]
+[
+    {
+        "counter": 0,
+        "publicKey": "pAEDAzkBACBZAQCgna71QXVhAofa-ptd...",
+        "credentialID": "HEeJWgh9QOWURee7dF..."
+    },
+    {
+        "counter": 2,
+        "publicKey": "pQECbt1via1qrycev0vyc...",
+        "credentialID": "_HbcWx_XWd6Pyjy56LOjqPh..."
+    },
+    {
+        "counter": 5,
+        "publicKey": "pQECAyYgASFYIGpEwjn-koYPv8NjXshLZA5C...",
+        "credentialID": "1V145nEVRuXWky8CyvW79pq1qxe..."
+    }
+]
+\end{lstlisting}
+
+Dabei besitzt jedes Element jeweils einen counter, um die Anzahl an Einloggversuchen zu zählen, den öffentlichen Schlüssel und eine einmalige credentialID, die bei jeder Registration als 'exludedCredentialID' an den Clienten übermittel wird, um zu signalisieren das diese credentialID sich nicht erneut registrieren kann. (Um doppelte Registrationen von ein und dem selben Gerät zu verhindern für den selben Nutzer)
 \end{enumerate}
 
 \section{Erfolgreiche Authentifikation}
