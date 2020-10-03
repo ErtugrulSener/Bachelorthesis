@@ -10,7 +10,7 @@ Eine dieser neuen Methoden ist das zweite Verfahren. Nach dem Passwort ist das w
 Das dritte Verfahren, die 'Web Authentication', ist wohl das Erforschungswürdigste der drei Verfahren. Sie ist von allen drei Verfahren am seltensten auf Internetseiten vertreten und da stellt sich nach einer Analyse des Mehrwertes dieses Verfahrens die Frage nach dem Grund dafür. Im Gegensatz zu den anderen beiden Authentifikationsmethoden wurde Dieses nicht für den Prototypen ausgewählt, weil es so weit verbreitet und bereits genutzt wird sondern genau im Gegenteil: Es wurde gewählt, um mögliche Gründe zu suchen weshalb das Verfahren der Webauthn heutzutage kein Standard darzustellen scheint. Es muss untersucht werden ob es starke Nachteile Gegenüber der anderen Verfahren bietet, denn im Ansatz scheint es alle Nachteile des Passwortes auszumerzen.
 \newpage
 
-\section{Prototypenaufbau}
+\section{Authentifikation in drei Schichten}
 
 \begin{center}
     \center
@@ -20,3 +20,22 @@ Das dritte Verfahren, die 'Web Authentication', ist wohl das Erforschungswürdig
 Das Ziel des Prototypen ist es, wie eingangs erwähnt, vorhandene Authentifizierungsverfahren abseits der klassischen UserID / Passwort Methode zu begutachten und dessen Schwächen aufzudecken. Daraus ergeben sich die typischen drei Komponenten von Drei-Tier-Client-Server Architekturen:
 
 Ein Client, der Anfragen an die Applikation (das Backend bzw. den Server) sendet, welches die Daten dann in einer Datenbank mittels eines DBMS (Datenbankmanagementsystems) persistiert und verwaltet. Wie auch im Bild zur 3 Tier Architektur zu sehen, agiert der User auf dem Presentation Layer und stellt anfragen bzw. sendet JSON Objekte an den Server, der die entsprechenden Webservices liefert. Der Server speichert keine States, wodurch der Nutzer typischerweise mit jeder Anfrage alle benötigten Informationen liefern muss. Der Server liefert demnach lediglich die \ac{rest} Schnittstellen. Implementationsdetails und weitere Informationen zum Prototyp gibt es in folgenden Kapiteln.
+
+\section{Kriterien für eine erfolgreiche Authentifikation}
+Auch wenn die Frage: ``Ist eine gelungene Authentifikation auch eine erfolgreiche Authentifikation?'' eine philosophische zu sein scheint, ist sie dennoch nicht minder interessant. Es wurde bereits gezeigt, dass Nutzer nicht gewillt sind komplizierte und aufwendige Dinge zu tun, um sich selbst und ihre Daten im Internet zu schützen. Sofern also die Methodik der Webseite zu kompliziert ist, sucht der Nutzer sich Ausflüchte um die vorhanenden Verfahren so angenehm wie möglich zu machen, was wiederrum die Sicherheit ihrer Internetpräsenz gefährdet. Übertragen auf die altbekannten Passwörter bedeutet dies, dass nur weil ein Nutzer sich mit seinem Nutzernamen und seinem Passwort auf einer Webseite anmelden kann, dies nicht bedeutet das das eine wirklich erfolgreiche Authentifikation, aus Sicht des Nutzers, ist. Das Passwort besitzt zu viele Schwachstellen als das man dies als Erfolg verbuchen kann. Es scheint eher dem Zweck 'irgendeiner Schutzbariere zwischen fremder Person und Daten des Nutzers' zu dienen als wirklich zur 'Sicherheit'.
+
+Überträgt man dieses Wissen auf die Kriterien dieser Arbeit ergeben sich folgende Anforderungen:
+
+\begin{itemize} 
+\item \textbf{Nutzerfreundlichkeit}
+
+Angefangen mit einem der wichtigsten Kriterien und der größten Herausforderung an die User Experience (UX) des 21. Jahrhunderts. Der Prototyp soll eine einfache Authentifikation ermöglichen. Keine allzu starken Weiterleitungen, keine Popups, keine langen Ladezeiten und vorallem zwecks Authentifizierung: Keine sinnfreie Aneinanderschaltung von verschiedenen Sicherheitsfaktoren. Ein Beispiel hierfür ist, dass nach der Bestätigung des Einloggvorgangs durch Fingerabdruck zusätzlich eine PIN und in folge dessen ein Sicherheitsschlüssel (mit zusätzlich benötigtem PIN) verlangt wird, obwohl nach dem ersten Schritt des Fingerabdrucks bereits die Authentizität des Users festgestellt wurde. So muss der Prototyp am Besten aus nur einem Faktor der Sicherheit bestehen und dem Nutzer die Auswahl zur Selbstentscheidung über die verschiedenen Möglichkeiten bieten. Bietet man dem Nutzer nur eines der Verfahren geht man Gefahr, dass dieses eine als zu umständlich befunden wird. Der User wird versuchen das Verfahren zu vereinfachen um seiner Bequemlichkeit dienlich zu sein. Im konkreten Fall des Prototyps soll es demnach auch reichen nur einen der registrierten Geräte für die Web Authentication zu nutzen, so kann der User bequem die PIN zur Authentifizierung nutzen. Falls der Rechner dies nicht unterstützt, kann der User zum Sicherheitsschlüssel greifen oder das Smartphone für das TOTP - Verfahren verwenden.
+
+\item \textbf{Sicherheit}
+
+Ein konkretes wichtiges und messbares Kriterium, das der Sicherheit dient ist es, Metadaten zu vermeiden. Der Prototyp soll meist die selben Statuscodes und nur allgemeine Fehlermeldungen bei nicht erfolgreicher Authentifikation zurückgeben. So ist die Nachricht ``Das Passwort ist inkorrekt.'' als obsoluter Fehler zu betrachten, da ein Angreifer nun die Möglichkeit hat, durch einen Bruteforce - Angriff auf das Loginformular das richtige Passwort zu erraten. Diese Nachricht würde nämlich implizieren, dass ein Nutzer mit eingegebenem Nutzernamen in der Datenbank vorhanden ist, doch das Passwort nicht stimmt. Stattdessen sollen allgemeine Responsemessages gegeben werden wie ``Der Benutzername oder das Passwort sind falsch.'' um dem Angreifer keinerlei Daten zu geben.
+
+Gleichzeitig muss die Verbindung zum Backend, auch im Prototyp, durch ein eigenes SSL - Zertifikat gesichert sein. \ac{mitm} - Angriffe sind, wie bereits erläutert, nicht immer verhinderbar. 
+
+\item \textbf{sehr hoch} (Schadensauswirkungen können ein existenziell bedrohliches Ausmaß annehmen
+\end{itemize}
