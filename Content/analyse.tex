@@ -98,3 +98,66 @@ Dabei besitzt jedes Element jeweils einen counter, um die Anzahl an Einloggversu
 \end{enumerate}
 
 \section{Fehlerbetrachtung}
+
+Die Fehlerbetrachtung ist essenziell um nun auf die Probleme einzugehen, die während der Implementation bereits ersichtlich wurden.
+
+\begin{enumerate}
+\item \textbf{UX-Probleme bei Geräteregistrierung für Webauthn unter Windows}
+
+Bei der Implementation des Webauthn - Protokolls schien es zunächst ein Mal nicht ersichtlich ob die unerklärlichen Dialogboxen nun ein Implementationsproblem darstellten oder tatsächlich so gewollt sind. Erst die Prüfung durch das offizielle 'Playground-Tool' der FIDO Alliance, zu finden unter 'https://webauthn.io/' wurde es ersichtlich, dass die verwirrenden UX Entscheidungen von Windows kein Fehler des Prototyps sind. Dennoch tragen sie zur allgemeinen Unverständnis bei.
+Bei diesem Problem geht es um folgende Abfolge an Dialogboxen, die bei der Registration eines neuen Geräts erscheinen:
+\newpage
+
+\begin{enumerate}
+\item Der Nutzer klickt unter Angabe seines Nutzernamens auf den Button 'Gerät registrieren' und erwartet eine Auswahl an vorhandenen Geräten, die registriert werden können. In diesem Beispiel stehen ein physischer Sicherheitsschlüssel und Windows-Hello-PIN zur Verfügung.
+
+\begin{center}
+    \center
+    \includegraphics[width=10cm]{ux_problem_1.png}
+\end{center}
+
+\item Statt der erwarteten Auswahlbox erhält der Nutzer die Möglichkeit auf die Windows-Hello-PIN und geht nicht von weiteren Auswahlmöglichkeiten aus.
+
+\begin{center}
+    \center
+    \includegraphics[width=10cm]{ux_problem_2.png}
+\end{center}
+
+\item Beim Betätigen der Escape-Taste erscheint plötzlich der Dialog, um einen Sicherheitsschlüssel zu registrieren. Dies ist bereits ein Problem, weil der User zum Zeitpunkt der Registration nicht wissen kann, dass dies überhaupt möglich war. Bei der Implementation ist diese Option auch nur durch Zufall aufgefallen.
+
+\begin{center}
+    \center
+    \includegraphics[width=10cm]{ux_problem_3.png}
+\end{center}
+\end{enumerate}
+
+Im Vergleich dazu sieht der Dialog für den Login, wie vom Nutzer erwartet, durch ein Gerät folgend aus (sofern das Feld 'webauthn\_authenticator\_data' nicht leer ist):
+
+\begin{center}
+    \center
+    \includegraphics[width=10cm]{ux_problem_4.png}
+\end{center}
+
+\item \textbf{Unerwartete Auswahlmöglichkeiten bei keinem registrierten Authenticator}
+
+Sollte das Feld 'webauthn\_authenticator\_data' allerdings leer sein, erscheint folgender Dialog:
+
+\begin{center}
+    \center
+    \includegraphics[width=10cm]{ux_problem_6.png}
+\end{center}
+
+Dieser ist insofern ein Fehler, da kein Sicherheitsschlüssel registriert wurde und bei Auswahl dessen nichts passiert. Gleichzeitig werden hier von Windows alle erstellten 'Profile' während der Testphase angezeigt, dessen Name gleich verwirrend für den Nutzer ist. Wenn also das Profil mit dem Namen 'michaeljacksonfan123' versucht einzuloggen, erhält er einen Statuscode 401 (Nicht autorisiert) als Response. Der Fehler hierbei ist die Anzeige einer Einloggoption durch Windows-Sicherheit, die nicht valide ist. Selbst bei bestätigtem und korrektem PIN. Die Felder 'exludedCredentialIDs' für die Registration und 'allowedCredentialIDs' für den Login scheinen keine Wirkung zu zeigen, dies könnte einerseits an der WebauthnAPI liegen, die ein Modul für NodeJS ist. Andererseits könnten nicht richtig konfigurierte Optionen für den Login ('/webauthn/generate-assertion-options' - Pfad) oder für die Registrierung ('/webauthn/generate-attestation-options' - Pfad) der Grund sein.
+
+\item \textbf{Selbsterstelltes Zertifikat wird vom Browser als unsicher eingestuft}
+
+\begin{center}
+    \center
+    \includegraphics[width=10cm]{not_safe_ssl.png}
+\end{center}
+
+\item \textbf{Bruteforce-Angriffe können Datenbank überlasten}
+
+Der Prototyp besitzt keinerlei Zugriffskontrolle. Demnach ist es zum jetzigen Stand möglich, unendlich Anfragen an das Backend zu senden, welches z.B: SQL Anfragen an die Datenbank stellt. Dies könnte die Datenbank überlasten oder sogar den Server crashen. Sollte nämlich kein Pooling mehr möglich sein, wird der Server einen Fehler schmeißen und abstürzen. Dies sollte in einer im Business-Umfeld verwendeten Anwendung implementiert werden, um sowohl den Crash des Servers als auch die Integrität der Datne zu gewährleisten. Ohne solche Abfragen ist das Erraten der Daten des Nutzers (vorallem des Passwortes) nur eine Frage der Zeit und nicht mehr der Möglichkeiten.
+
+\end{enumerate}
