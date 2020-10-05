@@ -4,16 +4,16 @@ const JSEncrypt = require('node-jsencrypt')
 const cors = require('cors')
 const fs = require('fs')
 const qrcode = require('qrcode')
-const https = require('https');
+const https = require('https')
 const { Pool } = require('pg')
-const { authenticator } = require('otplib');
+const { authenticator } = require('otplib')
 
 const {
     generateAttestationOptions,
     verifyAttestationResponse,
     generateAssertionOptions,
     verifyAssertionResponse,
-  } = require('@simplewebauthn/server');
+  } = require('@simplewebauthn/server')
 
 const {
     ReasonPhrases,
@@ -35,9 +35,9 @@ const MIN_USERNAME_LENGTH = 8
 const MIN_PASSWORD_LENGTH = 8
 const TOTP_TOKEN_LENGTH = 6
 
-const privateKey  = fs.readFileSync('../keys/ssl/server.key', 'utf8');
-const certificate = fs.readFileSync('../keys/ssl/server.cert', 'utf8');
-const sslCredentials = {key: privateKey, cert: certificate};
+const privateKey  = fs.readFileSync('../keys/ssl/server.key', 'utf8')
+const certificate = fs.readFileSync('../keys/ssl/server.cert', 'utf8')
+const sslCredentials = {key: privateKey, cert: certificate}
 
 const app = express()
 
@@ -77,34 +77,34 @@ function getUserAuthenticator(queryRes, id)
 function isValidUsername(username)
 {
     if (!username || typeof(username) !== "string")
-        return false;
+        return false
     
     if (username.length < MIN_USERNAME_LENGTH)
-        return false;
+        return false
 
-    return true;
+    return true
 }
 
 function isValidPassword(password)
 {
     if (!password || typeof(password) !== "string")
-        return false;
+        return false
     
     if (password.length < MIN_PASSWORD_LENGTH)
-        return false;
+        return false
 
-    return true;
+    return true
 }
 
 function isValidTotpToken(totp_token)
 {
     if (!totp_token || typeof(totp_token) !== "string")
-        return false;
+        return false
     
     if (totp_token.length != TOTP_TOKEN_LENGTH)
-        return false;
+        return false
 
-    return true;
+    return true
 }
 
 app.post('/password/login', function (req, res) {
@@ -155,7 +155,7 @@ app.get('/password/create_password_hash', (req, res) => {
 
 app.post('/logout', (req, res) => {
     clearSessionCookie(req, res)
-    res.redirect(WEBAPP_URL + '/index.html');
+    res.redirect(WEBAPP_URL + '/index.html')
 })
 
 app.get('/get_public_key', (req, res) => {
@@ -165,14 +165,14 @@ app.get('/get_public_key', (req, res) => {
 
 function createTotpAuthenticationUrl(username,  totp_secret, req, res)
 {
-    const secret = totp_secret || authenticator.generateSecret();
-    const otpauth = authenticator.keyuri(username, PROJECT_NAME, secret);
+    const secret = totp_secret || authenticator.generateSecret()
+    const otpauth = authenticator.keyuri(username, PROJECT_NAME, secret)
         
     qrcode.toDataURL(otpauth, (err, imageUrl) => {
-        if (err) throw err;
+        if (err) throw err
 
         pool.query("UPDATE users SET totp_secret = $1::text WHERE username = $2::text AND totp_secret = null", [secret, username], (updateErr, updateRes) => {
-            if (updateErr) throw updateErr;
+            if (updateErr) throw updateErr
         })
 
         apiSend(res, StatusCodes.OK, {'otpauth': otpauth, 'imageUrl': imageUrl, 'secret': secret})
@@ -203,7 +203,7 @@ app.post('/totp/check_username', (req, res) => {
         if (totp_activated === 1)
         {
             apiSend(res, StatusCodes.OK, "Success")
-            return;
+            return
         }
 
         createTotpAuthenticationUrl(username, totp_secret, req, res)
@@ -234,19 +234,19 @@ app.post('/totp/check_token', (req, res) => {
         if (!totp_secret)
         {
             apiSend(res, StatusCodes.UNAUTHORIZED)
-            return;
+            return
         }
 
-        const isValid = authenticator.check(totp_token, totp_secret);
+        const isValid = authenticator.check(totp_token, totp_secret)
 
         if (!isValid)
         {
             apiSend(res, StatusCodes.UNAUTHORIZED)
-            return;
+            return
         }
 
         pool.query("UPDATE users SET totp_activated = 1 WHERE username = $1::text AND totp_activated = 0", [username], (updateErr, updateRes) => {
-            if (updateErr) throw updateErr;
+            if (updateErr) throw updateErr
         })
 
         createSessionCookie(req, res)
@@ -289,10 +289,10 @@ app.get('/webauthn/generate-attestation-options', (req, res) => {
             extensions: {
                 txAuthSimple: ""
             }
-        });
+        })
     
         pool.query("UPDATE users SET webauthn_register_challenge = $1::text WHERE username = $2::text", [options.challenge, username], (updateErr, updateRes) => {
-            if (updateErr) throw updateErr;
+            if (updateErr) throw updateErr
         })
 
         res.send(options)
@@ -320,7 +320,7 @@ app.post('/webauthn/verify-attestation', (req, res) => {
 
         const expectedChallenge = queryRes.rows[0].webauthn_register_challenge
 
-        let verification;
+        let verification
         try
         {
             verification = await verifyAttestationResponse({
@@ -332,30 +332,30 @@ app.post('/webauthn/verify-attestation', (req, res) => {
         }
         catch(error)
         {
-            return res.status(StatusCodes.UNAUTHORIZED).send({ error: error.message });
+            return res.status(StatusCodes.UNAUTHORIZED).send({ error: error.message })
         }
 
-        const { verified, authenticatorInfo } = verification;
-        const { base64PublicKey, base64CredentialID, counter } = authenticatorInfo;
+        const { verified, authenticatorInfo } = verification
+        const { base64PublicKey, base64CredentialID, counter } = authenticatorInfo
         
         const Authenticator = {
             credentialID: base64CredentialID,
             publicKey: base64PublicKey,
             counter,
-        };
+        }
 
         const query = `UPDATE users SET webauthn_authenticator_data = (
             CASE
                 WHEN webauthn_authenticator_data IS NULL THEN '[]'::JSONB
                 ELSE webauthn_authenticator_data
             END
-        ) || $1 WHERE username = $2::text`;
+        ) || $1 WHERE username = $2::text`
 
         pool.query(query, [Authenticator, username], (updateErr, updateRes) => {
-            if (updateErr) throw updateErr;
+            if (updateErr) throw updateErr
         })
 
-        res.send( { verified });
+        res.send( { verified })
     })
 })
 
@@ -384,10 +384,10 @@ app.get('/webauthn/generate-assertion-options', (req, res) => {
                 txAuthSimple: "",
             },
             allowedCredentialIDs: userAuthenticators.map(data => data.credentialID),
-          });
+          })
     
         pool.query("UPDATE users SET webauthn_login_challenge = $1::text WHERE username = $2::text", [options.challenge, username], (updateErr, updateRes) => {
-            if (updateErr) throw updateErr;
+            if (updateErr) throw updateErr
         })
 
         res.send(options)
@@ -423,7 +423,7 @@ app.post('/webauthn/verify-assertion', (req, res) => {
 
         const expectedChallenge = queryRes.rows[0].webauthn_login_challenge
 
-        let verification;
+        let verification
         try
         {
             verification = await verifyAssertionResponse({
@@ -441,7 +441,7 @@ app.post('/webauthn/verify-assertion', (req, res) => {
             return
         }
 
-        const { verified, _ } = verification;
+        const { verified, _ } = verification
     
         /* TODO: Figure out why the counter for security keys is going wrong, eg: beginning at >= 6000?
         const userAuthenticators = getUserAuthenticators(queryRes)
@@ -454,11 +454,11 @@ app.post('/webauthn/verify-assertion', (req, res) => {
         }
 
         pool.query("UPDATE users SET webauthn_authenticator_data = $1 WHERE username = $2::text", [JSON.stringify(userAuthenticators), username], (updateErr, updateRes) => {
-            if (updateErr) throw updateErr;
+            if (updateErr) throw updateErr
         })
         */
 
         createSessionCookie(req, res)
-        res.send( { verified });
+        res.send( { verified })
     })
 })
