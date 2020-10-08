@@ -98,25 +98,25 @@ CREATE TABLE public.users
 )
 \end{lstlisting}
 
-Er speichert typische Daten um den Nutzer zu authentifizieren. Jeder Nutzer besitzt eine eigene einzigartige ID, die eine Ganzzahl ist. Dann besitzt jeder User einen Nutzernamen im Feld 'username'. Die Felder 'password' und 'salt' besitzen logischerweise nur Nutzer, die die Passwort Authentifikation unterstützen. Die Felder 'totp\_secret' und 'totp\_activated' werden einerseits genutzt um das Geheimnis (welches der User beim TOTP Setup einscannt) zu erstellen und den Nutzer damit später zu authentifizieren und andererseits um dem Frontend zu signalisieren, ob der Nutzer das Setup vollzogen hat. Die Challenge-Felder für Webauthn 'webauthn\_register\_challenge' und 'webauthn\_login\_challenge' sind als eine Art Zwischenablage zu verstehen und hätten theoretisch auch im Cache des Backends persistiert werden können, da bei jeder neuen Registration und jedem neuen Login durch Webauthn eine neue Challenge vom Server erstellt und vom Nutzer nach dem Signieren zurückkommt. Interessant ist das Feld 'webauthn\_authenticator\_data', das in einer JSON-Liste alle registrierten Geräte für die Web Authentication sichert.
+Er speichert typische Daten um den Nutzer zu authentifizieren. Jeder Nutzer besitzt eine eigene einzigartige ID, die eine Ganzzahl ist. Dann besitzt jeder User einen Nutzernamen im Feld 'username'. Die Felder 'password' und 'salt' besitzen logischerweise nur Nutzer, die die Passwort Authentifikation unterstützen. Die Felder 'totp\_secret' und 'totp\_activated' werden einerseits genutzt um das Geheimnis (welches der User beim TOTP Setup einscannt) zu erstellen und den Nutzer damit später zu authentifizieren und andererseits um dem Frontend zu signalisieren, ob der Nutzer das Setup vollzogen hat. Die Challenge-Felder für Webauthn 'webauthn\_register\_challenge' und 'webauthn\_login\_challenge' sind als eine Art Zwischenablage zu verstehen und hätten theoretisch auch im Cache des Backends persistiert werden können, da bei jeder neuen Registration und jedem neuen Login durch Webauthn eine neue Challenge vom Server erstellt und vom Nutzer nach dem Signieren zurückkommt. Interessant ist das Feld 'webauthn\_authenticator\_data', das in einer JSON-Liste alle registrierten Geräte für die Web Authentication beinhält.
 \newpage
 
  \begin{lstlisting}[language=json,firstnumber=1]
 [
     {
         "counter": 0,
-        "publicKey": "pAEDAzkBACBZAQCgna71QXVhAofa-ptd...",
+        "publicKey": "pAEDAzkBACBZAQCgna71QX...",
         "credentialID": "HEeJWgh9QOWURee7dF..."
     },
     {
         "counter": 2,
         "publicKey": "pQECbt1via1qrycev0vyc...",
-        "credentialID": "_HbcWx_XWd6Pyjy56LOjqPh..."
+        "credentialID": "_HbcWx_XWd6Pyjyh..."
     },
     {
         "counter": 5,
-        "publicKey": "pQECAyYgASFYIGpEwjn-koYPv8NjXshLZA5C...",
-        "credentialID": "1V145nEVRuXWky8CyvW79pq1qxe..."
+        "publicKey": "pQECAyYgASFYIGpEwj...",
+        "credentialID": "45nEVRuXWky8CyvW79e..."
     }
 ]
 \end{lstlisting}
@@ -131,50 +131,67 @@ Die Fehlerbetrachtung ist essenziell um nun auf die Probleme einzugehen, die wä
 \begin{enumerate}
 \item \textbf{UX-Probleme bei Geräteregistrierung für Webauthn unter Windows}
 
-Bei der Implementation des Webauthn - Protokolls schien es zunächst ein Mal nicht ersichtlich ob die unerklärlichen Dialogboxen nun ein Implementationsproblem darstellten oder tatsächlich so gewollt sind. Erst die Prüfung durch das offizielle 'Playground-Tool' der FIDO Alliance, zu finden unter 'https://webauthn.io/' wurde es ersichtlich, dass die verwirrenden UX Entscheidungen von Windows kein Fehler des Prototyps sind. Dennoch tragen sie zur allgemeinen Unverständnis bei.
-Bei diesem Problem geht es um folgende Abfolge an Dialogboxen, die bei der Registration eines neuen Geräts erscheinen:
+Bei der Implementation des Webauthn - Protokolls schien es zunächst ein Mal nicht ersichtlich ob die unerklärlichen Dialogboxen nun ein Implementationsproblem darstellten oder tatsächlich so gewollt sind. Erst die Prüfung durch das offizielle 'Playground-Tool' der FIDO Alliance, zu finden unter 'https://webauthn.io/' wurde es ersichtlich, dass die verwirrenden UX Entscheidungen von Windows kein Fehler des Prototyps sind. 
 \newpage
+
+Dennoch tragen sie zur allgemeinen Unverständnis bei.
+Bei diesem Problem geht es um folgende Abfolge an Dialogboxen, die bei der Registration eines neuen Geräts erscheinen:
 
 \begin{enumerate}
 \item Der Nutzer klickt unter Angabe seines Nutzernamens auf den Button 'Gerät registrieren' und erwartet eine Auswahl an vorhandenen Geräten, die registriert werden können. In diesem Beispiel stehen ein physischer Sicherheitsschlüssel und Windows-Hello-PIN zur Verfügung.
 
-\begin{center}
-    \center
-    \includegraphics[width=10cm]{ux_problem_1.png}
-\end{center}
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=8cm]{ux_problem_1.png}
+	\caption[UX-Problem bei Webauthn Geräteregistrierung (1)]{UX-Problem bei Webauthn Geräteregistrierung (1)}
+	\label{fig:ux_problem_1}
+\end{figure}
 
 \item Statt der erwarteten Auswahlbox erhält der Nutzer die Möglichkeit auf die Windows-Hello-PIN und geht nicht von weiteren Auswahlmöglichkeiten aus.
 
-\begin{center}
-    \center
-    \includegraphics[width=10cm]{ux_problem_2.png}
-\end{center}
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=8cm]{ux_problem_2.png}
+	\caption[UX-Problem bei Webauthn Geräteregistrierung (2)]{UX-Problem bei Webauthn Geräteregistrierung (2)}
+	\label{fig:ux_problem_2}
+\end{figure}
+\newpage
 
-\item Beim Betätigen der Escape-Taste erscheint plötzlich der Dialog, um einen Sicherheitsschlüssel zu registrieren. Dies ist bereits ein Problem, weil der User zum Zeitpunkt der Registration nicht wissen kann, dass dies überhaupt möglich war. Bei der Implementation ist diese Option auch nur durch Zufall aufgefallen.
+\item Beim Betätigen der Escape-Taste erscheint plötzlich der Dialog, um einen Sicherheitsschlüssel zu registrieren. Dies ist bereits ein Problem, weil der User sich zum Zeitpunkt der Registration nicht über diese Möglichkeit bewusst ist. Bei der Implementation ist diese Option auch nur durch Zufall aufgefallen.
 
-\begin{center}
-    \center
-    \includegraphics[width=10cm]{ux_problem_3.png}
-\end{center}
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=8cm]{ux_problem_3.png}
+	\caption[UX-Problem bei Webauthn Geräteregistrierung (3)]{UX-Problem bei Webauthn Geräteregistrierung (3)}
+	\label{fig:ux_problem_3}
+\end{figure}
+
+\item Im Vergleich dazu sieht der Dialog für den Login, wie vom Nutzer erwartet, durch ein Gerät folgend aus (sofern das Feld 'webauthn\_authenticator\_data' nicht leer ist):
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=8cm]{ux_problem_4.png}
+	\caption[UX-Problem bei Webauthn Geräteregistrierung (4)]{UX-Problem bei Webauthn Geräteregistrierung (4)}
+	\label{fig:ux_problem_4}
+\end{figure}
 \end{enumerate}
-
-Im Vergleich dazu sieht der Dialog für den Login, wie vom Nutzer erwartet, durch ein Gerät folgend aus (sofern das Feld 'webauthn\_authenticator\_data' nicht leer ist):
-
-\begin{center}
-    \center
-    \includegraphics[width=10cm]{ux_problem_4.png}
-\end{center}
+\newpage
 
 \item \textbf{Unerwartete Auswahlmöglichkeiten bei keinem registrierten Authenticator}
 
 Sollte das Feld 'webauthn\_authenticator\_data' allerdings leer sein, erscheint folgender Dialog:
 
-\begin{center}
-    \center
-    \includegraphics[width=10cm]{ux_problem_6.png}
-\end{center}
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=8cm]{ux_problem_5.png}
+	\caption[UX-Problem bei Webauthn Geräteregistrierung (5)]{UX-Problem bei Webauthn Geräteregistrierung (5)}
+	\label{fig:ux_problem_5}
+\end{figure}
 
-Dieser ist insofern ein Fehler, da kein Sicherheitsschlüssel registriert wurde und bei Auswahl dessen nichts passiert. Gleichzeitig werden hier von Windows alle erstellten 'Profile' während der Testphase angezeigt, dessen Name gleich verwirrend für den Nutzer ist. Wenn also das Profil mit dem Namen 'michaeljacksonfan123' versucht einzuloggen, erhält er einen Statuscode 401 (Nicht autorisiert) als Response. Der Fehler hierbei ist die Anzeige einer Einloggoption durch Windows-Sicherheit, die nicht valide ist. Selbst bei bestätigtem und korrektem PIN. Die Felder 'exludedCredentialIDs' für die Registration und 'allowedCredentialIDs' für den Login scheinen keine Wirkung zu zeigen, dies könnte einerseits an der WebauthnAPI liegen, die ein Modul für NodeJS ist. Andererseits könnten nicht richtig konfigurierte Optionen für den Login ('/webauthn/generate-assertion-options' - Pfad) oder für die Registrierung ('/webauthn/generate-attestation-options' - Pfad) der Grund sein.
+Dieser ist insofern ein Fehler, da kein Sicherheitsschlüssel registriert wurde und bei Auswahl dessen nichts passiert. Gleichzeitig werden hier von Windows alle erstellten 'Profile' während der Testphase angezeigt, dessen Name gleich verwirrend für den Nutzer ist. Wenn also das Profil mit dem Namen 'michaeljacksonfan123' versucht einzuloggen, erhält er einen Statuscode 401 (Nicht autorisiert) als Response. Der Fehler hierbei ist die Anzeige einer Einloggoption durch Windows-Sicherheit, die nicht valide ist. Selbst bei bestätigtem und korrektem PIN. Die Felder 'exludedCredentialIDs' für die Registration und 'allowedCredentialIDs' für den Login scheinen keine Wirkung zu zeigen, dies könnte einerseits an der WebauthnAPI liegen, die ein Modul für NodeJS ist. Andererseits könnten nicht richtig konfigurierte Optionen für den Login / die Registration der Grund sein.
+\newpage
+
+Außerdem ist die genutzte Libary im Backend nicht vollständig, bei einer eigenen Implementation des Webauthn - Protokolls nach dem \ac{w3c} könnte dieser Punkt womöglich (durch erheblichen Mehraufwand) gelöst werden.
 
 \item \textbf{Selbsterstelltes Zertifikat wird vom Browser als unsicher eingestuft}
 
@@ -185,6 +202,6 @@ Dieser ist insofern ein Fehler, da kein Sicherheitsschlüssel registriert wurde 
 
 \item \textbf{Bruteforce-Angriffe können Datenbank überlasten}
 
-Der Prototyp besitzt keinerlei Zugriffskontrolle. Demnach ist es zum jetzigen Stand möglich, unendlich Anfragen an das Backend zu senden, welches z.B: SQL Anfragen an die Datenbank stellt. Dies könnte die Datenbank überlasten oder sogar den Server crashen. Sollte nämlich kein Pooling mehr möglich sein, wird der Server einen Fehler schmeißen und abstürzen. Dies sollte in einer im Business-Umfeld verwendeten Anwendung implementiert werden, um sowohl den Crash des Servers als auch die Integrität der Datne zu gewährleisten. Ohne solche Abfragen ist das Erraten der Daten des Nutzers (vorallem des Passwortes) nur eine Frage der Zeit und nicht mehr der Möglichkeiten.
+Der Prototyp besitzt keinerlei Zugriffskontrolle. Demnach ist es zum jetzigen Stand möglich, unendlich Anfragen an das Backend zu senden, welches z.B: SQL Anfragen an die Datenbank stellt. Dies könnte die Datenbank überlasten oder sogar den Server crashen. Sollte nämlich kein Pooling mehr möglich sein, wird der Server einen Fehler schmeißen und abstürzen. Dies sollte in einer im Business-Umfeld verwendeten Anwendung implementiert werden, um sowohl den Crash des Servers als auch die Integrität der Daten zu gewährleisten. Ohne solche Abfragen ist das Erraten der Daten des Nutzers (vorallem des Passwortes) nur eine Frage der Zeit und nicht mehr der Möglichkeiten.
 
 \end{enumerate}

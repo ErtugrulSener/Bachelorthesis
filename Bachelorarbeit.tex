@@ -42,6 +42,7 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 \usepackage{bera}% optional: just to have a nice mono-spaced font
 \usepackage{xcolor}
 \usepackage{animate}
+\usepackage{pdfpages}
 
 \setkomafont{caption}{\small}
 
@@ -121,14 +122,10 @@ numeric % (default) use numeric citation style sorted by the occurence in text: 
 
 \cleardoublepage
 
-\printbibliography % Print the bibliography
-\cleardoublepage
-
 \makedeclarationofauthorship % print the declaration of authorship
+\printbibliography % Print the bibliography
 \printnoidxglossary[type=\acronymtype] % print the list of abbreviations
 \listoffigures % print the list of figures
-\listoftables % print the list of tables
-\lstlistoflistings % print the list of source codes
 
 \appendix % Begin the appendix. Chapters begin with letters
 % \pagenumbering{Roman} %page numbers as capital roman numbers
