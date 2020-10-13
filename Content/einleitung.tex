@@ -69,7 +69,11 @@ Der Nachteil für den Angreifer in diesem Szenario ist die zeitlich limitierte M
 Durch den Zugang zum Dienst ist es dem Angreifer somit (je nach Implementierung) möglich, sensible Daten des Nutzers einzusehen, die nicht für ihn bestimmt sind. Die Frage nach der 'Relevanz' von sensiblen Daten sollte obsolet werden, wenn man an die Möglichkeiten denkt, die der Angreifer mit ihnen nun in der Hand hällt. Mit diesen könnte er den Nutzer zum Beispiel erpressen um an noch mehr Daten oder Geld des Nutzers zu kommen.
 
 \subsection{Alternative Methoden}
-Neben den bereits etablierten Methoden beschäftigt sich die Forschung mit alternativen Authentifizierungsverfahren wie der 'negative authentication' und der 'adaptive mult-factor authentication'. Bei der \ac{nas} wird die Useranfrage auf Invalidität statt auf Validität geprüft. Die Idee dahinter basiert auf dem 'Negative Selection Algorithm', welcher das menschliche Immunsystem als Insipriator verwendet. T - Helferzellen dienen hierbei der Unterscheidung von Entitäten im Körper nach 'körpereigen' (self) und 'körperfremd' (non-self). \cite{A11} \\
+Neben den bereits etablierten Methoden beschäftigt sich die Forschung mit alternativen Authentifizierungsverfahren wie der 'negative authentication' und der 'adaptive mult-factor authentication'. Was diese Verfahren für die Forschung bedeuten und inwiefern sie einen Vorteil bieten wird im Folgenden erläutert.
+
+\textbf{Negative Authentication (NA)}
+
+Bei der \ac{nas} wird die Useranfrage auf Invalidität statt auf Validität geprüft. Die Idee dahinter basiert auf dem 'Negative Selection Algorithm', welcher das menschliche Immunsystem als Insipriator verwendet. T - Helferzellen dienen hierbei der Unterscheidung von Entitäten im Körper nach 'körpereigen' (self) und 'körperfremd' (non-self). \cite{A11} \\
 
 \begin{figure}[ht]
 	\centering
@@ -82,7 +86,12 @@ In der self-region sind die Passwortdaten beherrbergt. Diese Daten werden von de
 Während man \ac{nas} verwendet, ist es angebracht die Passwort-Profile und die Anti-Passwort-Profile auf zwei voneinander getrennten Servern zu bewahren. Dabei finden wie auf der Abbildung 2.2 zu sehen zwei Authentifizierungen statt. Bei der Ersten wird der Request mit der Datenmenge der Anti-Passwörter verglichen. Gibt es ein Match, ist der eingeggangene Request invalide. Auf diesem liegen die Detektoren für die Anti-Passwörter, die bei der Authentifizierung die Gülltigkeit der Anfrage erkennen, ähnlich wie die T-Helferzellen die Gülltigkeit von anderen Zellen im menschlichen Körper erkennen.
 
 Dieser ''getrennte Server Ansatz`` für die Negativauthentikation besitzt gewisse Vorteile zu der Posoitivauthentifikation. Zunächst ein Mal ist es in der Lage bereits vor der eigentlichen Prüfung nach der Korrektheit des Passwortes invalide Requests abzufangen, die den zweiten Layer nie erreichen. Dies hat sich bereits als zielbringend erwiesen \cite{A14}. Außerdem sind die Daten des Nutzers hinter einem von außen nicht zu erreichenden Server versteckt, der nur mit dem ersten Layer kommuniziert. 'Guessing attacks' also Angriffe, die auf der Erratung von Passwörtern basieren, werden damit zu hoher Wahrscheinlichkeit verhindert \cite{A11}.
-\newpage
+
+\textbf{Adaptive multi-factor-authentication (A-MFA)}
+
+Da Nutzer durch mobile Technologien immer mehr Zugriff auf Online Services erhielten, entwickelte sich der Stand der Forschung immer mehr in Richtung verschiedener Authentifizierungsverfahren, unter denen der User eine Auswahl für sich treffen muss um seine Identität zu bestätigen \cite{A11}. Die Auswahl an Authentifizierungsfaktoren die dem Nutzer von Anwendungen präsentiert werden, entscheidet letzlich über die Performance von MFA's \cite{A11}. Daraus resultiert, dass die zufällige (oder Selbe) Auswahl von Verfahren für die MFA die Vertrauenswürdigkeit beeinträchtigen, da die Auswahl erratbar wird und bei entsprechenden Exploits auch unsicher. 
+
+Die Auswahl der Verfahren findet zunächst aufgrund der Möglichkeiten eines Nutzers statt, demnach wird ermittelt welche Umgebung (welches Betriebssystem, welches Kommunikationsmedium und historische Daten) der Nutzer verwendet [15]. Um eine sichere Lösung für eine adaptive MFA zu entwickeln, muss die Erratbarkeit von dem Set an Authentifikationsmöglichkeiten verhindert werden. Dies bedeutet, dass es nicht möglich sein darf vordefinierte Muster für einen speziellen Nutzer mit einer speziellen Umgebung vorrauszusagen \cite{11}.
 
 \section{Zielsetzung}
 Passwörter können der allumfassenden sicheren Authentifikation nicht mehr gerecht werden. Es braucht weitere oder gänzlich andere Methoden, um die Identität eines Nutzers zu schützen. Die Menschheit benötigt einfache und unkomplizierte Methoden, die ihnen nicht das Gefühl geben allumfängliches technisches Know-How besitzen zu müssen, um die eigenen Daten im Internet zu schützen. Es sollte zum konsens werden, dass es bequeme Mechanismen für jeden Nutzer gibt. Je nach Gewichtung der Relevanz der Daten in den Kriterien Sicherheit, Bequemlichkeit und Datenschutz gibt es Möglichkeiten dies zu bewerkstelligen. Dies muss sowohl den Dienstbetreibern als auch dem Endnutzer bewusst werden. Nur die Erkenntnis über ein vorhandenes Problem kann zur Besserung führen und ist der erste Schritt. Nur so kann das Passwortproblem ein für alle Mal gelöst werden.
