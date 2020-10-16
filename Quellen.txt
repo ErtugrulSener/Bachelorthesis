@@ -19,5 +19,3 @@ Bilder:
 [P4] https://www.nist.gov/sites/default/files/styles/480_x_480_limit/public/images/2019/09/25/multifactor-authentificaton.png?itok=u8piF91z
 [P5] https://help.comodo.com/uploads/Comodo%20Internet%20Security%20Essentials/c3638301a498590e075bfb3aa1af97cc/5eac818f1e1c4adc19d335055b06586b/6f5d8661cc5b108f38938d1a391f6c51/mitm_no_CISE.PNG
 [P6] https://qph.fs.quoracdn.net/main-qimg-82af1fe49f85a31700d35570189a1fce.webp
-
-[A15] https://www.albany.edu/iasymposium/proceedings/2014/ASIA14Proceedings.pdf#page=49
