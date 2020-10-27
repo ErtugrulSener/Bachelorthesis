@@ -2,34 +2,6 @@
 \chapter{Grundlagen}
 Laut des IT-Grundschutz-Kompendiums vom \ac{bsi} könne ein Benutzer aus Bequemlichkeit oder pragmatischen Gründen bewusst auf komplizierte und unhandliche Kryptomodule verzichten und Informationen stattdessen im Klartext übertragen. \cite{A5} Dies stellt ein hohes Sicherheitsrisiko für Unternehmen, aber auch Privatpersonen dar, da Benutzer nicht gewillt sind ihre Passwörter durch komplizierte Verfahren zu erzeugen und in regelmäßigen Abständen vollkommen randomisiert zu setzen. An neuartige Ansätze des Logins in nativen oder webbasierten Anwendungen stellen sich dadurch völlig neue Herausforderungen. So müssen neue Authentifizierungsmöglichkeiten nicht nur sicher sein, sondern auch komfortabel genutzt und bedient werden können, da sie sonst von den Endnutzern gemieden oder umgangen werden. Wichtig ist auch, dass die breite Masse Zugriff auf die Ressourcen hat, die es zur Nutzung dieser Verfahren braucht. Man denke nur an die ganzen betrieblichen Passwörter, bei denen zum Monatsende nur eine Zahl an der letzten Stelle des Passwortes geändert wird. Laut einer Statistik von 2019, der ``Global Data Risk Report From the Varonis Data Lab'', gaben 38\% aller Nutzer an ein Passwort im Unternehmen zu nutzen, das sie nicht (oder nur geringfügig) ändern. Außerdem wird laut dieser Statistik alle 364 Tage wahrscheinlich ein Data Breach aufgrund von unsicheren Passwörtern in einem mittelständigen Unternehmen stattfinden. Die monatliche Ablaufzeit von Passwörtern in Unternehmen scheint also nicht ganz den Effekt zu erzielen, der ursprünglich damit geplant war, da die Arbeiter die Bequemlichkeit über die Sicherheit stellen.
 
-\section{IT-Grundschutzkriterien}
-Der IT-Grundschutz definiert den Schutzbedarf eines bestimmten Assets je nachdem welches Risiko bei Verletzung der Grundwerte Vertraulichkeit, Integrität und Verfügbarkeit entstehen \cite{A7}.
-\newpage
-
-Der \ac{bsi} spezifiziert folgende Schutzbedarfskategorien:
-\begin{itemize} 
-\item \textbf{normal} (Schadenauswirkungen begrenzt bis überschaubar)
-\item \textbf{hoch} (Schadenauswirkungen könnten hoch bzw. beträchtlich sein)
-\item \textbf{sehr hoch} (Schadensauswirkungen können ein existenziell bedrohliches Ausmaß annehmen
-\end{itemize}
-Bei dem Authentifikationsprototypen wird die Schadensauswirkung für alle nicht personenbezogenen Daten wohl im Bereich normal liegen, da schon im Aufbau darauf geachtet wird, dass nur so viele Daten vom User verwendet werden, wie zwingend notwendig. (Nach dem Need-To-Know Prinzip) Sollte die Webseite oder Teile der Webseite publiziert bzw. im Business - Umfeld genutzt werden, muss eine Neubewertung der Daten nach Vertraulichkeit, Integrität und Verfügbarkeit stattfinden. Vor allem muss darauf geachtet werden, dass Daten über Fingerabdrücke verschlüsselt und Passwörter im gehashten Zustand in Datenbanken persistiert sind.
-
-Gleichzeitig sollten die genutzten Verfahren insgesamt mathematisch sicher sein, auf veraltete Verschlüsselungsverfahren ist zu verzichten. Dies gilt auch für Hashverfahren wie MD5, die häufig durch sehr große vorgerechnete Tabellen erraten werden können. Stattdessen ist auf Verfahren wie SHA512 (Gehasht mit Salt und Pepper) zu setzen.
-
-Bei Kompromittierung des Servers, welches die größte Bedrohung für den Prototypen darstellt, droht ein Data-Breach. Dies kann für ein Unternehmen einen Imageschaden sowie weitreichende juristische Klagen zur Folge haben. Das sind bereits 2 der 7 aufgeführten Schadensszenarien durch den \ac{bsi}, wobei einer bereits eine Zertifizierung begründen kann. Je nach dem wie kompliziert die Ursprungsdaten sind und welcher Hashingalgorithmus in Kombination mit Salt und Pepper genutzt wurde, können vorallem Nutzerpassphrasen an die Öffentlichkeit gelangen und Angreifer können die Passwörter für andere Dienste nutzen. Dies setzt voraus, dass ein Angreifer an den Hash des Passwortes kommt und den Pepper des Servers auslesen kann. Und anschließend mit dem Salt des Nutzers und dem Pepper des Servers das Passwort errechnet durch Bruteforce. Die Wahrscheinlichkeit für diesen Schaden ist sehr niedrig (Schadenskategorie normal).
-\newpage
-
-\begin{figure}[ht]
-	\centering
-	\includegraphics [width=13cm]{Abb_2_09_Varianten.png}
-	\caption[Absicherungsarten nach \ac{bsi} und IT-Grundschutz]{Absicherungsarten nach \ac{bsi} und IT-Grundschutz}
-	\label{fig:Abb_2_09_Varianten}
-\end{figure}
-
-Der IT-Grundschutz beschreibt die drei Arten der Absicherung wie folgt. Die Basis-Absicherung ist relevant für Institutionen die einen Einstieg in den IT-Grundschutz suchen und relativ schnell alle relevanten Geschäftspozesse mit einfach umzusetzenden Basismaßnahmen sichern wollen. Die Kern-Absicherung konzentriert sich auf besonders wichtige Geschäftsprozesse und vertieft sich in die Sicherung dieser. Von einer Standard-Absicherung spricht man, wenn alle empfohlenen IT-Grundschutz-Vorgehensweisen durchgeführt werden. Sie beschreibt den allumfassenden Schutz der Prozesse und Bereiche der Institution, wie das Bild des \ac{bsi} verdeutlicht. \cite{A8}
-
-Bei dem Prototyp wird eine Basis-Absicherung nach \ac{bsi} durchgeführt. Es wird darauf geachtet alle Datenschutzkriterien für Webanwendungen zu erfüllen. Kriterien die nicht erfüllt werden konnten oder wurden, werden dokumentiert und in der Auswertung erläutert. Die Wahl der Basis-Absicherung begründet sich damit, dass lokale Testdaten im Prototyp verarbeitet werden, für die kein bis nur ein sehr geringer Schutzbedarf besteht. Eine Kern-Absicherung käme nur in Frage, falls ein ganz bestimmter Prozess oder Asset des Prototyps geschützt werden müsste wie zum Beispiel der Zugriff auf die Datenbank durch den Prototypen. Insgesamt ist dieser Teil der Abschlussarbeit auch als Einstieg in den IT-Grundschutz zu verstehen, welcher laut \ac{bsi} selbst die Basis-Absicherung als Empfehlung und zur Folge hat und sich am Besten für vorhandene Zwecke eignet.
-
 \section{Standard nach FIDO2}
 Die genannten Probleme sind den Menschen seit einigen Jahren bekannt und wurden vor allem mit Verfahren gelöst, die keine Passwörter (oder allgemein Verfahren der Wissenskategorie) zur Authentifikation benötigen und diese maximal als ersten Layer der Sicherheit implementieren. Das bekannteste Beispiel für einen Standard zur sicheren und bequemen Authentifikation im Internet findet man unter dem Schlüsselwort FIDO2. FIDO steht dabei für 'Fast Identity Online' (Schnelle Identität im Netz). Sie ist das Ergebnis einer Kooperation des \ac{w3c} und der FIDO Alliance.
 
